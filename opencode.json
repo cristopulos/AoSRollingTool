@@ -1,0 +1,103 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "model": "litellm/kimi-with-fallback",
+    "provider": {
+        "litellm": {
+            "name": "LiteLLM",
+            "npm": "@ai-sdk/openai-compatible",
+            "options": {
+                "baseURL": "http://localhost:4001/v1"
+            },
+            "models": {
+                "kimi-with-fallback": {
+                    "name": "kimi-with-fallback",
+                    "tools": true
+                },
+                "minimax-with-fallback": {
+                    "name": "minimax-with-fallback",
+                    "tools": true
+                },
+                "gpt-oss-20b": {
+                    "name": "gpt-oss-20b",
+                    "tools": true
+                }
+            }
+        }
+    },
+    "mcp": {
+        "fetch": {
+            "type": "local",
+            "command": [
+                "uvx",
+                "mcp-server-fetch"
+            ],
+            "enabled": true
+        }
+    },
+    "agent": {
+        "build": {
+            "description": "Primary coding agent — writes, edits, and runs code",
+            "mode": "primary",
+            "model": "litellm/kimi-with-fallback",
+            "temperature": 0.2,
+            "tools": {
+                "read": true,
+                "write": true,
+                "edit": true,
+                "bash": true
+            }
+        },
+        "plan": {
+            "description": "Read-only planning agent — analyzes and proposes without touching files",
+            "mode": "primary",
+            "model": "litellm/minimax-with-fallback",
+            "temperature": 0.5,
+            "tools": {
+                "read": true,
+                "write": false,
+                "edit": false,
+                "bash": false
+            }
+        },
+        "reviewer": {
+            "description": "Code review subagent — audits for bugs, security issues, and style",
+            "mode": "subagent",
+            "model": "litellm/gpt-oss-20b",
+            "temperature": 0.1,
+            "tools": {
+                "read": true,
+                "write": false,
+                "edit": false,
+                "bash": false
+            }
+        },
+        "debugger": {
+            "description": "Debug subagent — investigates failures, reads logs, fixes tests",
+            "mode": "subagent",
+            "model": "litellm/kimi-with-fallback",
+            "temperature": 0.2,
+            "tools": {
+                "read": true,
+                "write": true,
+                "edit": true,
+                "bash": true
+            }
+        },
+        "explore": {
+            "model": "litellm/gpt-oss-20b"
+        },
+        "compaction": {
+            "model": "litellm/minimax-with-fallback"
+        }
+    },
+    "plugin": [
+        "@slkiser/opencode-quota",
+        "opencode-notifier",
+        "opencode-search"
+    ],
+    "experimental": {
+        "quotaToast": {
+            "toastStyle": "grouped"
+        }
+    }
+}

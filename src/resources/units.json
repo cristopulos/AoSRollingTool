@@ -1,0 +1,186 @@
+{
+  "units": [
+    {
+      "id": "stormcast_lord_arcanum",
+      "name": "Lord-Arcanum on Gryph-Charger",
+      "faction": "Stormcast Eternals",
+      "save": 3,
+      "ward": null,
+      "weapons": [
+        {
+          "name": "Staff of the Arcane",
+          "range": "2\"",
+          "attacks": "4",
+          "to_hit": 3,
+          "to_wound": 3,
+          "rend": -2,
+          "damage": "D6",
+          "crit_hit": null
+        }
+      ]
+    },
+    {
+      "id": "stormcast_judicator",
+      "name": "Judicator",
+      "faction": "Stormcast Eternals",
+      "save": 3,
+      "ward": null,
+      "weapons": [
+        {
+          "name": "Skybolt Bow",
+          "range": "24\"",
+          "attacks": "2",
+          "to_hit": 3,
+          "to_wound": 3,
+          "rend": -1,
+          "damage": "1",
+          "crit_hit": null
+        },
+        {
+          "name": "Boltstorm Crossbow",
+          "range": "18\"",
+          "attacks": "3",
+          "to_hit": 3,
+          "to_wound": 3,
+          "rend": -1,
+          "damage": "1",
+          "crit_hit": null
+        }
+      ]
+    },
+    {
+      "id": "orruk_megaboss",
+      "name": "Orruk Megaboss",
+      "faction": "Orruk Warclans",
+      "save": 4,
+      "ward": null,
+      "weapons": [
+        {
+          "name": "Boss's Ironjaw",
+          "range": null,
+          "attacks": "D6",
+          "to_hit": 4,
+          "to_wound": 3,
+          "rend": -1,
+          "damage": "2",
+          "crit_hit": null
+        },
+        {
+          "name": "Gore-choppa",
+          "range": null,
+          "attacks": "4",
+          "to_hit": 3,
+          "to_wound": 3,
+          "rend": -1,
+          "damage": "2",
+          "crit_hit": { "type": "auto_wound" }
+        }
+      ]
+    },
+    {
+      "id": "orruk_brutes",
+      "name": "Orruk Brutes",
+      "faction": "Orruk Warclans",
+      "save": 4,
+      "ward": null,
+      "weapons": [
+        {
+          "name": "Jagged Gore-hacka",
+          "range": null,
+          "attacks": "2",
+          "to_hit": 4,
+          "to_wound": 3,
+          "rend": -1,
+          "damage": "2",
+          "crit_hit": null
+        },
+        {
+          "name": "Boss Klaw",
+          "range": null,
+          "attacks": "3",
+          "to_hit": 3,
+          "to_wound": 3,
+          "rend": -1,
+          "damage": "2",
+          "crit_hit": { "type": "extra_hit" }
+        }
+      ]
+    },
+    {
+      "id": "soulblight_vampire_lord",
+      "name": "Vampire Lord",
+      "faction": "Soulblight Gravelords",
+      "save": 4,
+      "ward": 5,
+      "weapons": [
+        {
+          "name": "Soulbound Blade",
+          "range": null,
+          "attacks": "5",
+          "to_hit": 3,
+          "to_wound": 3,
+          "rend": -1,
+          "damage": "D3",
+          "crit_hit": null
+        }
+      ]
+    },
+    {
+      "id": "soulblight_zombies",
+      "name": "Deadwalker Zombies",
+      "faction": "Soulblight Gravelords",
+      "save": 6,
+      "ward": null,
+      "weapons": [
+        {
+          "name": "Crude Weapons",
+          "range": null,
+          "attacks": "D6",
+          "to_hit": 5,
+          "to_wound": 5,
+          "rend": 0,
+          "damage": "1",
+          "crit_hit": null
+        }
+      ]
+    },
+    {
+      "id": "tzeentch_herald",
+      "name": "Herald of Tzeentch",
+      "faction": "Disciples of Tzeentch",
+      "save": 5,
+      "ward": null,
+      "weapons": [
+        {
+          "name": "Staff of Change",
+          "range": "18\"",
+          "attacks": "3",
+          "to_hit": 4,
+          "to_wound": 3,
+          "rend": -1,
+          "damage": "D3",
+          "crit_hit": { "type": "mortal_wounds", "value": "D3" }
+        }
+      ]
+    },
+    {
+      "id": "tzeentch_horrors",
+      "name": "Pink Horrors",
+      "faction": "Disciples of Tzeentch",
+      "save": 5,
+      "ward": null,
+      "weapons": [
+        {
+          "name": "Coruscating Flames",
+          "range": "18\"",
+          "attacks": "D6",
+          "to_hit": 4,
+          "to_wound": 4,
+          "rend": 0,
+          "damage": "1",
+          "crit_hit": null
+        }
+      ]
+    }
+  ]
+}
