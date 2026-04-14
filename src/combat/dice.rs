@@ -49,8 +49,6 @@ pub fn parse_dice_string(input: &str) -> Result<u8, DiceParseError> {
         return Err(DiceParseError::InvalidFormat(input));
     }
 
-    let mut total: u8 = 0;
-
     // Split by plus or minus to handle modifiers
     // Example: "2D6+3" -> dice_part = "2D6", modifier = "+3"
     let (dice_part, modifier) = if let Some(idx) = input.find('+') {
@@ -82,9 +80,12 @@ pub fn parse_dice_string(input: &str) -> Result<u8, DiceParseError> {
         )));
     }
 
+    // Use u16 for accumulation to prevent overflow, then clamp to u8
+    let mut accum: u16 = 0;
     for _ in 0..count {
-        total += if sides == 6 { roll_d6() } else { roll_d3() };
+        accum += if sides == 6 { roll_d6() } else { roll_d3() } as u16;
     }
+    let mut total = accum.min(u8::MAX as u16) as u8;
 
     // Apply modifier
     if let Some(mod_str) = modifier {

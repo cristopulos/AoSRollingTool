@@ -364,6 +364,8 @@ mod tests {
 
     #[test]
     fn calculate_save_target_basic() {
+        // Rend is stored as negative values (-1, -2, etc.)
+        // Save 4+ with rend -1 = need 5+ to save (harder)
         assert_eq!(calculate_save_target(4, 0), 4);
         assert_eq!(calculate_save_target(4, -1), 5);
         assert_eq!(calculate_save_target(4, -3), 7);

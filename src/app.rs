@@ -43,6 +43,7 @@ impl AoSApp {
         if let Ok(units) = load_units_from_path("src/resources/units.json") {
             return units;
         }
+        log::warn!("Could not load units.json from resources/ or src/resources/");
         Vec::new()
     }
 

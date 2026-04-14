@@ -12,7 +12,7 @@ impl<'a> UnitPanel<'a> {
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Attackers");
+        ui.heading("Attacker");
         ui.separator();
 
         // Group units by faction
@@ -28,18 +28,15 @@ impl<'a> UnitPanel<'a> {
         for faction in factions {
             ui.collapsing(faction.clone(), |ui| {
                 for unit in self.app.units.iter().filter(|u| u.faction == faction) {
-                    let mut selected = self.app.selected_attackers.contains(&unit.id);
-                    if ui.checkbox(&mut selected, &unit.name).changed() {
-                        if selected {
-                            if !self.app.selected_attackers.contains(&unit.id) {
-                                self.app.selected_attackers.push(unit.id.clone());
-                            }
-                            // Auto-select first weapon if none selected
-                            if self.app.selected_weapon.is_empty() && !unit.weapons.is_empty() {
-                                self.app.selected_weapon = unit.weapons[0].name.clone();
-                            }
+                    let selected = self.app.selected_attackers.contains(&unit.id);
+                    if ui.radio(selected, &unit.name).clicked() && !selected {
+                        // Select this unit (single-select)
+                        self.app.selected_attackers.clear();
+                        self.app.selected_attackers.push(unit.id.clone());
+                        // Auto-select first weapon
+                        if !unit.weapons.is_empty() {
+                            self.app.selected_weapon = unit.weapons[0].name.clone();
                         } else {
-                            self.app.selected_attackers.retain(|id| id != &unit.id);
                             self.app.selected_weapon.clear();
                         }
                     }
@@ -51,23 +48,21 @@ impl<'a> UnitPanel<'a> {
             ui.separator();
             ui.heading("Weapon");
 
-            // Collect weapons from selected attackers
-            let selected_units: Vec<_> = self
+            // Show weapons for selected attacker
+            if let Some(selected_unit) = self
                 .app
                 .units
                 .iter()
-                .filter(|u| self.app.selected_attackers.contains(&u.id))
-                .collect();
-
-            for unit in selected_units {
-                ui.label(unit.name.to_string());
-                for weapon in &unit.weapons {
+                .find(|u| self.app.selected_attackers.contains(&u.id))
+            {
+                ui.label(selected_unit.name.to_string());
+                for weapon in &selected_unit.weapons {
                     ui.horizontal(|ui| {
                         ui.radio_value(
                             &mut self.app.selected_weapon,
                             weapon.name.clone(),
                             format!(
-                                "{} (A:{}, Hit:{}+",
+                                "{} (A:{}, Hit:{}+)",
                                 weapon.name, weapon.attacks, weapon.to_hit
                             ),
                         );
