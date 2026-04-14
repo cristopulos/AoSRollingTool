@@ -15,50 +15,52 @@ impl<'a> TargetPanel<'a> {
         ui.heading("Defender");
         ui.separator();
 
-        let mut factions: Vec<String> = self
-            .app
-            .units
-            .iter()
-            .map(|u| u.faction.clone())
-            .collect();
-        factions.sort();
-        factions.dedup();
-
-        for faction in factions {
-            ui.collapsing(faction.clone(), |ui| {
-                for unit in self.app.units.iter().filter(|u| u.faction == faction) {
-                    ui.horizontal(|ui| {
-                        ui.radio_value(
-                            &mut self.app.selected_defender,
-                            unit.id.clone(),
-                            unit.name.to_string(),
-                        );
-                    });
-                }
-            });
-        }
-
-        ui.separator();
-        ui.checkbox(&mut self.app.include_ward,
-            "Include Ward Saves",
-        );
-
-        // Show defender stats if selected
-        if !self.app.selected_defender.is_empty() {
-            if let Some(defender) = self
+        ui.push_id("defender_panel", |ui| {
+            let mut factions: Vec<String> = self
                 .app
                 .units
                 .iter()
-                .find(|u| u.id == self.app.selected_defender)
-            {
-                ui.separator();
-                ui.label(format!("Save: {}+", defender.save));
-                if let Some(ward) = defender.ward {
-                    ui.label(format!("Ward: {}+", ward));
-                } else {
-                    ui.label("Ward: None");
+                .map(|u| u.faction.clone())
+                .collect();
+            factions.sort();
+            factions.dedup();
+
+            for faction in factions {
+                ui.collapsing(faction.clone(), |ui| {
+                    for unit in self.app.units.iter().filter(|u| u.faction == faction) {
+                        ui.horizontal(|ui| {
+                            ui.radio_value(
+                                &mut self.app.selected_defender,
+                                unit.id.clone(),
+                                unit.name.to_string(),
+                            );
+                        });
+                    }
+                });
+            }
+
+            ui.separator();
+            ui.checkbox(&mut self.app.include_ward,
+                "Include Ward Saves",
+            );
+
+            // Show defender stats if selected
+            if !self.app.selected_defender.is_empty() {
+                if let Some(defender) = self
+                    .app
+                    .units
+                    .iter()
+                    .find(|u| u.id == self.app.selected_defender)
+                {
+                    ui.separator();
+                    ui.label(format!("Save: {}+", defender.save));
+                    if let Some(ward) = defender.ward {
+                        ui.label(format!("Ward: {}+", ward));
+                    } else {
+                        ui.label("Ward: None");
+                    }
                 }
             }
-        }
+        });
     }
 }
