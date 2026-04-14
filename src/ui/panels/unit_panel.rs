@@ -1,6 +1,25 @@
 use eframe::egui;
 
 use crate::app::AoSApp;
+use crate::data::models::CritEffect;
+
+fn format_weapon_stats(weapon: &crate::data::models::Weapon) -> String {
+    let crit_str = match &weapon.crit_hit {
+        Some(CritEffect::AutoWound) => "AutoWnd".to_string(),
+        Some(CritEffect::ExtraHit) => "ExtraHit".to_string(),
+        Some(CritEffect::MortalWounds(v)) => format!("MW({})", v),
+        None => "—".to_string(),
+    };
+    format!(
+        "A:{} Hit:{}+ Wnd:{}+ R:{} D:{} Crit:{}",
+        weapon.attack,
+        weapon.to_hit,
+        weapon.to_wound,
+        weapon.rend,
+        weapon.damage,
+        crit_str
+    )
+}
 
 pub struct UnitPanel<'a> {
     app: &'a mut AoSApp,
@@ -63,15 +82,52 @@ impl<'a> UnitPanel<'a> {
                                 ui.radio_value(
                                     &mut self.app.selected_weapon,
                                     weapon.name.clone(),
-                                    format!(
-                                        "{} (A:{}, Hit:{}+)",
-                                        weapon.name, weapon.attacks, weapon.to_hit
-                                    ),
+                                    format!("{} {}", weapon.name, format_weapon_stats(weapon)),
                                 );
                             });
                         }
                     });
                 }
+
+                // Champion checkbox
+                ui.separator();
+                ui.checkbox(&mut self.app.has_champion, "Champion (+1 attack)");
+
+                // Attack override toggle
+                ui.checkbox(
+                    &mut self.app.use_attack_override,
+                    "Override total attacks",
+                );
+
+                if self.app.use_attack_override {
+                    ui.horizontal(|ui| {
+                        ui.label("Attacks:");
+                        ui.add(
+                            egui::DragValue::new(&mut self.app.attack_override)
+                                .range(1..=200)
+                                .clamp_existing_to_range(true),
+                        );
+                    });
+                    ui.label(format!(
+                        "(Ignores models × attack, uses {} attacks directly)",
+                        self.app.attack_override
+                    ));
+                } else {
+                    // Model count input (only when not overriding)
+                    ui.horizontal(|ui| {
+                        ui.label("Models:");
+                        ui.add(
+                            egui::DragValue::new(&mut self.app.num_models)
+                                .range(1..=100)
+                                .clamp_existing_to_range(true),
+                        );
+                    });
+                }
+
+                ui.checkbox(
+                    &mut self.app.stop_after_wound,
+                    "Stop after wound (defender rolls saves)",
+                );
             }
         });
     }

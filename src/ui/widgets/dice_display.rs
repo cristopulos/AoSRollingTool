@@ -2,6 +2,8 @@ use eframe::egui;
 
 use crate::combat::types::DiceRoll;
 
+const SCROLL_THRESHOLD: usize = 30;
+
 pub struct DiceDisplay<'a> {
     rolls: &'a [DiceRoll],
 }
@@ -17,7 +19,7 @@ impl<'a> DiceDisplay<'a> {
             return;
         }
 
-        ui.horizontal(|ui| {
+        let show_dice = |ui: &mut egui::Ui| {
             for roll in self.rolls {
                 let (color, label) = if roll.is_crit {
                     (egui::Color32::GOLD, format!("{}", roll.value))
@@ -32,6 +34,20 @@ impl<'a> DiceDisplay<'a> {
                     egui::RichText::new(label).monospace().size(16.0),
                 );
             }
-        });
+        };
+
+        if self.rolls.len() > SCROLL_THRESHOLD {
+            egui::ScrollArea::horizontal()
+                .max_height(40.0)
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        show_dice(ui);
+                    });
+                });
+        } else {
+            ui.horizontal_wrapped(|ui| {
+                show_dice(ui);
+            });
+        }
     }
 }

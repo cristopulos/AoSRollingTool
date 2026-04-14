@@ -10,7 +10,7 @@
         {
           "name": "Staff of the Arcane",
           "range": "2\"",
-          "attacks": "4",
+          "attack": "4",
           "to_hit": 3,
           "to_wound": 3,
           "rend": -2,
@@ -29,7 +29,7 @@
         {
           "name": "Skybolt Bow",
           "range": "24\"",
-          "attacks": "2",
+          "attack": "2",
           "to_hit": 3,
           "to_wound": 3,
           "rend": -1,
@@ -39,7 +39,7 @@
         {
           "name": "Boltstorm Crossbow",
           "range": "18\"",
-          "attacks": "3",
+          "attack": "3",
           "to_hit": 3,
           "to_wound": 3,
           "rend": -1,
@@ -58,7 +58,7 @@
         {
           "name": "Boss's Ironjaw",
           "range": null,
-          "attacks": "D6",
+          "attack": "D6",
           "to_hit": 4,
           "to_wound": 3,
           "rend": -1,
@@ -68,7 +68,7 @@
         {
           "name": "Gore-choppa",
           "range": null,
-          "attacks": "4",
+          "attack": "4",
           "to_hit": 3,
           "to_wound": 3,
           "rend": -1,
@@ -87,7 +87,7 @@
         {
           "name": "Jagged Gore-hacka",
           "range": null,
-          "attacks": "2",
+          "attack": "2",
           "to_hit": 4,
           "to_wound": 3,
           "rend": -1,
@@ -97,7 +97,7 @@
         {
           "name": "Boss Klaw",
           "range": null,
-          "attacks": "3",
+          "attack": "3",
           "to_hit": 3,
           "to_wound": 3,
           "rend": -1,
@@ -116,7 +116,7 @@
         {
           "name": "Soulbound Blade",
           "range": null,
-          "attacks": "5",
+          "attack": "5",
           "to_hit": 3,
           "to_wound": 3,
           "rend": -1,
@@ -135,7 +135,7 @@
         {
           "name": "Crude Weapons",
           "range": null,
-          "attacks": "D6",
+          "attack": "D6",
           "to_hit": 5,
           "to_wound": 5,
           "rend": 0,
@@ -154,7 +154,7 @@
         {
           "name": "Staff of Change",
           "range": "18\"",
-          "attacks": "3",
+          "attack": "3",
           "to_hit": 4,
           "to_wound": 3,
           "rend": -1,
@@ -173,7 +173,7 @@
         {
           "name": "Coruscating Flames",
           "range": "18\"",
-          "attacks": "D6",
+          "attack": "D6",
           "to_hit": 4,
           "to_wound": 4,
           "rend": 0,

@@ -10,6 +10,7 @@ A Rust-based desktop application with a GUI for visualizing combat sequence roll
 - **Combat Log**: History of all previous rolls
 - **Critical Hit Support**: Auto-wound, Extra Hit, and Mortal Wounds
 - **Ward Saves**: Optional ward phase per unit profile
+- **Stop After Wound**: Checkbox to stop the combat sequence after Hit and Wound phases, allowing the defender to roll saves externally (useful for in-person games where each player rolls their own dice)
 
 ## Supported Factions
 

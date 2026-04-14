@@ -14,7 +14,12 @@ pub struct AoSApp {
     pub selected_attackers: Vec<String>, // Unit IDs
     pub selected_weapon: String,
     pub selected_defender: String,
+    pub num_models: usize, // Number of attacking models
+    pub has_champion: bool, // Adds +1 to total attacks
+    pub use_attack_override: bool, // Toggle between models×attack and fixed attacks
+    pub attack_override: usize, // Fixed attack count when override is enabled
     pub include_ward: bool,
+    pub stop_after_wound: bool,
     pub current_result: Option<CombatResult>,
     pub combat_log: Vec<CombatResult>,
     pub error_message: Option<String>,
@@ -28,7 +33,12 @@ impl AoSApp {
             selected_attackers: Vec::new(),
             selected_weapon: String::new(),
             selected_defender: String::new(),
+            num_models: 1,
+            has_champion: false,
+            use_attack_override: false,
+            attack_override: 10,
             include_ward: true,
+            stop_after_wound: false,
             current_result: None,
             combat_log: Vec::new(),
             error_message: None,
@@ -81,13 +91,18 @@ impl AoSApp {
                     .find(|w| w.name == self.selected_weapon)
                     .cloned();
 
-                match weapon {
+                    match weapon {
                     Some(weapon) => {
                         let result = resolve_combat(
                             &attacker,
                             &defender,
                             &weapon,
+                            self.num_models,
+                            self.has_champion,
+                            self.use_attack_override,
+                            self.attack_override,
                             self.include_ward,
+                            self.stop_after_wound,
                             None,
                         );
                         self.combat_log.push(result.clone());

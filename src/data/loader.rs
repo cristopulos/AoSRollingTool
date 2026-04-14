@@ -41,7 +41,7 @@ mod tests {
                 "weapons": [
                     {
                         "name": "Sword",
-                        "attacks": "3",
+                        "attack": "3",
                         "to_hit": 4,
                         "to_wound": 4,
                         "rend": 0,
@@ -59,7 +59,7 @@ mod tests {
                 "weapons": [
                     {
                         "name": "Mortal Weapon",
-                        "attacks": "3",
+                        "attack": "3",
                         "to_hit": 3,
                         "to_wound": 3,
                         "rend": -1,
@@ -90,7 +90,7 @@ mod tests {
             "faction": "Test",
             "save": 4,
             "ward": null,
-            "weapons": [{"name": "Sword", "attacks": "3", "to_hit": 4, "to_wound": 4, "rend": 0, "damage": "1"}]
+            "weapons": [{"name": "Sword", "attack": "3", "to_hit": 4, "to_wound": 4, "rend": 0, "damage": "1"}]
         }"#;
 
         let unit = serde_json::from_str::<Unit>(json).unwrap();

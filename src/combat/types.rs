@@ -29,6 +29,20 @@ pub struct DiceRoll {
 }
 
 #[derive(Debug, Clone)]
+pub enum VarianceStep {
+    AttackRoll {
+        per_model: String,
+        results: Vec<u8>,
+        total: usize,
+    },
+    DamageRoll {
+        per_wound: String,
+        results: Vec<u8>,
+        total: usize,
+    },
+}
+
+#[derive(Debug, Clone)]
 pub struct PhaseResult {
     #[allow(dead_code)]
     pub phase: Phase,
@@ -39,6 +53,7 @@ pub struct PhaseResult {
     pub auto_fails: bool,
     pub skipped: bool,
     pub description: String,
+    pub variance_step: Option<VarianceStep>,
 }
 
 #[derive(Debug, Clone)]
@@ -48,7 +63,17 @@ pub struct CombatResult {
     pub defender_name: String,
     pub phases: Vec<PhaseResult>,
     pub final_damage: usize,
+    /// Mortal wounds from critical hits that bypass the Save phase.
+    /// Still subject to Ward saves.
     pub mortal_wounds: usize,
+    /// True when combat was stopped after the Wound phase via the "Stop after wound" option.
+    pub stopped_after_wound: bool,
+    /// Total successful hits (including auto-wounds and extra hits from crits).
+    /// Only meaningful when `stopped_after_wound` is true.
+    pub total_hits: usize,
+    /// Total successful wounds (normal wounds + auto-wounds from crits).
+    /// Only meaningful when `stopped_after_wound` is true.
+    pub total_wounds: usize,
 }
 
 #[derive(Debug, Clone, Default)]

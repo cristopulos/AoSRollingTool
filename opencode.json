@@ -38,7 +38,7 @@
         "build": {
             "description": "Primary coding agent — writes, edits, and runs code",
             "mode": "primary",
-            "model": "litellm/kimi-with-fallback",
+            "model": "kimi-for-coding/k2p5",
             "temperature": 0.2,
             "tools": {
                 "read": true,
@@ -74,7 +74,7 @@
         "debugger": {
             "description": "Debug subagent — investigates failures, reads logs, fixes tests",
             "mode": "subagent",
-            "model": "litellm/kimi-with-fallback",
+            "model": "kimi-for-coding/k2p5",
             "temperature": 0.2,
             "tools": {
                 "read": true,

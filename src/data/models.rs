@@ -15,7 +15,7 @@ pub enum CritEffect {
 pub struct Weapon {
     pub name: String,
     pub range: Option<String>,
-    pub attacks: String,
+    pub attack: String,
     pub to_hit: u8,
     pub to_wound: u8,
     pub rend: i8,

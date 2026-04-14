@@ -35,16 +35,35 @@ impl<'a> CombatView<'a> {
 
         ui.separator();
 
-        ui.horizontal(|ui| {
-            ui.label("FINAL DAMAGE:");
-            ui.strong(format!("{}", self.result.final_damage));
-        });
+        if self.result.stopped_after_wound {
+            ui.heading("Sequence Stopped - Defender Rolls Saves");
+            ui.horizontal(|ui| {
+                ui.label("Hits determined:");
+                ui.strong(format!("{}", self.result.total_hits));
+            });
+            ui.horizontal(|ui| {
+                ui.label("Wounds to save:");
+                ui.strong(format!("{}", self.result.total_wounds));
+            });
+            if self.result.mortal_wounds > 0 {
+                ui.label(format!(
+                    "(includes {} mortal wounds from critical hits)",
+                    self.result.mortal_wounds
+                ));
+            }
+            ui.label("Save, Damage, and Ward phases are pending — roll these externally.");
+        } else {
+            ui.horizontal(|ui| {
+                ui.label("FINAL DAMAGE:");
+                ui.strong(format!("{}", self.result.final_damage));
+            });
 
-        if self.result.mortal_wounds > 0 {
-            ui.label(format!(
-                "(includes {} mortal wounds)",
-                self.result.mortal_wounds
-            ));
+            if self.result.mortal_wounds > 0 {
+                ui.label(format!(
+                    "(includes {} mortal wounds)",
+                    self.result.mortal_wounds
+                ));
+            }
         }
     }
 }
