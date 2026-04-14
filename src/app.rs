@@ -62,7 +62,7 @@ impl AoSApp {
             self.error_message = Some("Select at least one attacker".into());
             return;
         }
-        if self.selected_defender.is_empty() {
+        if self.selected_defender.is_empty() && !self.stop_after_wound {
             self.error_message = Some("Select a defender".into());
             return;
         }
@@ -77,11 +77,21 @@ impl AoSApp {
             .iter()
             .find(|u| u.id == self.selected_attackers[0])
             .cloned();
-        let defender = self
-            .units
-            .iter()
-            .find(|u| u.id == self.selected_defender)
-            .cloned();
+        let defender = if self.stop_after_wound && self.selected_defender.is_empty() {
+            Some(crate::data::models::Unit {
+                id: "none".into(),
+                name: "Defender (not selected)".into(),
+                faction: "-".into(),
+                save: 7,
+                ward: None,
+                weapons: vec![],
+            })
+        } else {
+            self.units
+                .iter()
+                .find(|u| u.id == self.selected_defender)
+                .cloned()
+        };
 
         match (attacker, defender) {
             (Some(attacker), Some(defender)) => {
