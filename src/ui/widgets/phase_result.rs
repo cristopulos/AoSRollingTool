@@ -1,15 +1,17 @@
 use eframe::egui;
 
+use crate::combat::simulation::PhaseSimulation;
 use crate::combat::types::{PhaseResult, VarianceStep};
 use crate::ui::widgets::dice_display::DiceDisplay;
 
 pub struct PhaseResultCard<'a> {
     phase: &'a PhaseResult,
+    simulation: Option<&'a PhaseSimulation>,
 }
 
 impl<'a> PhaseResultCard<'a> {
-    pub fn new(phase: &'a PhaseResult) -> Self {
-        Self { phase }
+    pub fn new(phase: &'a PhaseResult, simulation: Option<&'a PhaseSimulation>) -> Self {
+        Self { phase, simulation }
     }
 
     pub fn show(&self, ui: &mut egui::Ui) {
@@ -67,6 +69,26 @@ impl<'a> PhaseResultCard<'a> {
                         self.phase.successes, self.phase.failures, self.phase.total_output
                     ));
                 });
+            }
+
+            if let Some(sim) = self.simulation {
+                let color = if sim.percentile >= 0.90 {
+                    egui::Color32::from_rgb(100, 200, 100) // Green - great roll
+                } else if sim.percentile >= 0.50 {
+                    egui::Color32::from_rgb(200, 200, 100) // Yellow - average
+                } else {
+                    egui::Color32::from_rgb(200, 100, 100) // Red - below average
+                };
+                ui.label(
+                    egui::RichText::new(format!(
+                        "{:.0}th percentile (expected {}–{})",
+                        sim.percentile * 100.0,
+                        sim.percentiles.p25,
+                        sim.percentiles.p75
+                    ))
+                    .color(color)
+                    .size(12.0),
+                );
             }
         });
     }

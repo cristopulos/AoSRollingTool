@@ -1,15 +1,18 @@
 use eframe::egui;
 
-use crate::combat::types::CombatResult;
+use crate::combat::simulation::SimulationResult;
+use crate::combat::types::{CombatResult, Phase};
+use crate::ui::widgets::histogram::HistogramDisplay;
 use crate::ui::widgets::phase_result::PhaseResultCard;
 
 pub struct CombatView<'a> {
     result: &'a CombatResult,
+    simulation: Option<&'a SimulationResult>,
 }
 
 impl<'a> CombatView<'a> {
-    pub fn new(result: &'a CombatResult) -> Self {
-        Self { result }
+    pub fn new(result: &'a CombatResult, simulation: Option<&'a SimulationResult>) -> Self {
+        Self { result, simulation }
     }
 
     pub fn show(&self, ui: &mut egui::Ui) {
@@ -28,7 +31,13 @@ impl<'a> CombatView<'a> {
             .spacing([40.0, 4.0])
             .show(ui, |ui| {
                 for phase in &self.result.phases {
-                    PhaseResultCard::new(phase).show(ui);
+                    let sim = match phase.phase {
+                        Phase::Hit => self.simulation.map(|s| &s.hits_stats),
+                        Phase::Wound => self.simulation.map(|s| &s.wounds_stats),
+                        Phase::Damage => self.simulation.map(|s| &s.damage_stats),
+                        _ => None,
+                    };
+                    PhaseResultCard::new(phase, sim).show(ui);
                     ui.end_row();
                 }
             });
@@ -64,6 +73,55 @@ impl<'a> CombatView<'a> {
                     self.result.mortal_wounds
                 ));
             }
+        }
+
+        if let Some(sim) = self.simulation {
+            ui.separator();
+            ui.heading("Percentile Analysis");
+
+            let dmg = &sim.damage_stats;
+            ui.label(format!(
+                "Your damage of {} is at the {:.0}th percentile",
+                dmg.actual_value,
+                dmg.percentile * 100.0
+            ));
+
+            egui::Grid::new("sim_stats")
+                .num_columns(2)
+                .spacing([20.0, 4.0])
+                .show(ui, |ui| {
+                    ui.label("Mean:");
+                    ui.label(format!("{:.1}", dmg.percentiles.mean));
+                    ui.end_row();
+
+                    ui.label("10th percentile:");
+                    ui.label(format!("{}", dmg.percentiles.p10));
+                    ui.end_row();
+
+                    ui.label("25th percentile:");
+                    ui.label(format!("{}", dmg.percentiles.p25));
+                    ui.end_row();
+
+                    ui.label("Median (50th):");
+                    ui.strong(format!("{}", dmg.percentiles.p50));
+                    ui.end_row();
+
+                    ui.label("75th percentile:");
+                    ui.label(format!("{}", dmg.percentiles.p75));
+                    ui.end_row();
+
+                    ui.label("90th percentile:");
+                    ui.label(format!("{}", dmg.percentiles.p90));
+                    ui.end_row();
+                });
+
+            ui.separator();
+            HistogramDisplay::new(
+                &sim.histogram_bins,
+                dmg.actual_value,
+                "Damage Distribution",
+            )
+            .show(ui);
         }
     }
 }
