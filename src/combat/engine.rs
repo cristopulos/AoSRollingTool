@@ -206,8 +206,8 @@ pub fn resolve_combat(
     use_attack_override: bool,
     attack_override: usize,
     include_ward: bool,
-    /// When true, only process Hit and Wound phases. Save, Damage, and Ward phases
-    /// are marked as pending, and the defender rolls saves externally.
+    /* When true, only process Hit and Wound phases. Save, Damage, and Ward phases
+       are marked as pending, and the defender rolls saves externally. */
     stop_after_wound: bool,
     provided_rolls: Option<&[u8]>, // For testing only
 ) -> CombatResult {
