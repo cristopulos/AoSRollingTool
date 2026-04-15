@@ -64,16 +64,6 @@ Edit `resources/units.json` to add your own units and weapons:
 }
 ```
 
-## Converting Faction Data
-
-Faction data can be converted using the schema defined in [`.opencode/extraction/SCHEMA.md`](.opencode/extraction/SCHEMA.md). Intermediate JSON files go in `.opencode/extraction/units/`, named after each faction (e.g., `skaven.json`, `nighthaunt.json`). The `tools/convert` workspace member merges them into `resources/units.json`.
-
-Example:
-
-```bash
-cargo run -p convert -- --input-dir .opencode/extraction/units --output resources/units.json
-```
-
 ## Combat Rules Implemented
 
 1. **Hit**: Roll D6 per attack. 6 = critical hit (weapon-specific effect).
