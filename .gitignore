@@ -3,4 +3,5 @@
 
 # OpenCode artifacts
 .opencode/
+.opencode/AGENTS.md
 opencode.json
