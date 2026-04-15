@@ -13,36 +13,68 @@ impl<'a> TargetPanel<'a> {
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
         ui.heading("Defender");
+        // Search field filters units by name or faction
+        ui.horizontal(|ui| {
+            ui.label("Search:");
+            ui.text_edit_singleline(&mut self.app.defender_search);
+        });
         ui.separator();
 
         ui.push_id("defender_panel", |ui| {
-            let mut factions: Vec<String> = self
+            // Apply search filter to both unit names and faction names
+            let query = self.app.defender_search.to_lowercase();
+            let filtered_units: Vec<_> = self
                 .app
                 .units
                 .iter()
-                .map(|u| u.faction.clone())
+                .filter(|u| {
+                    let name = u.name.to_lowercase();
+                    let faction = u.faction.to_lowercase();
+                    name.contains(&query) || faction.contains(&query)
+                })
                 .collect();
+
+            // Group filtered units by faction
+            let mut factions: Vec<String> =
+                filtered_units.iter().map(|u| u.faction.clone()).collect();
             factions.sort();
             factions.dedup();
 
-            for faction in factions {
-                ui.collapsing(faction.clone(), |ui| {
-                    for unit in self.app.units.iter().filter(|u| u.faction == faction) {
-                        ui.horizontal(|ui| {
-                            ui.radio_value(
-                                &mut self.app.selected_defender,
-                                unit.id.clone(),
-                                unit.name.to_string(),
-                            );
+            ui.allocate_ui_with_layout(
+                egui::vec2(ui.available_width(), self.app.defender_panel_height),
+                egui::Layout::top_down(egui::Align::LEFT),
+                |ui| {
+                    egui::ScrollArea::vertical()
+                        .id_salt("defender_list")
+                        .auto_shrink([false; 2])
+                        .hscroll(false)
+                        .show(ui, |ui| {
+                            for faction in factions {
+                                let should_open =
+                                    query.is_empty() || faction.to_lowercase().contains(&query);
+                                egui::CollapsingHeader::new(faction.clone())
+                                    .default_open(true)
+                                    .open(Some(should_open))
+                                    .show(ui, |ui| {
+                                        for unit in
+                                            filtered_units.iter().filter(|u| u.faction == faction)
+                                        {
+                                            ui.horizontal(|ui| {
+                                                ui.radio_value(
+                                                    &mut self.app.selected_defender,
+                                                    unit.id.clone(),
+                                                    unit.name.to_string(),
+                                                );
+                                            });
+                                        }
+                                    });
+                            }
                         });
-                    }
-                });
-            }
+                },
+            );
 
             ui.separator();
-            ui.checkbox(&mut self.app.include_ward,
-                "Include Ward Saves",
-            );
+            ui.checkbox(&mut self.app.include_ward, "Include Ward Saves");
 
             // Show defender stats if selected
             if !self.app.selected_defender.is_empty() {

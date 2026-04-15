@@ -17,12 +17,16 @@ pub struct AoSApp {
     pub selected_attackers: Vec<String>, // Unit IDs
     pub selected_weapon: String,
     pub selected_defender: String,
-    pub num_models: usize, // Number of attacking models
-    pub has_champion: bool, // Adds +1 to total attacks
+    pub num_models: usize,         // Number of attacking models
+    pub has_champion: bool,        // Adds +1 to total attacks
     pub use_attack_override: bool, // Toggle between models×attack and fixed attacks
-    pub attack_override: usize, // Fixed attack count when override is enabled
+    pub attack_override: usize,    // Fixed attack count when override is enabled
     pub include_ward: bool,
     pub stop_after_wound: bool,
+    pub attacker_search: String,
+    pub defender_search: String,
+    pub attacker_panel_height: f32,
+    pub defender_panel_height: f32,
     pub current_result: Option<CombatResult>,
     pub combat_log: Vec<CombatResult>,
     pub error_message: Option<String>,
@@ -45,6 +49,10 @@ impl AoSApp {
             attack_override: 10,
             include_ward: true,
             stop_after_wound: false,
+            attacker_search: String::new(),
+            defender_search: String::new(),
+            attacker_panel_height: 260.0,
+            defender_panel_height: 140.0,
             current_result: None,
             combat_log: Vec::new(),
             error_message: None,
@@ -110,7 +118,7 @@ impl AoSApp {
                     .find(|w| w.name == self.selected_weapon)
                     .cloned();
 
-                    match weapon {
+                match weapon {
                     Some(weapon) => {
                         let result = resolve_combat(
                             &attacker,
@@ -154,12 +162,51 @@ impl eframe::App for AoSApp {
                 ui.separator();
             }
 
+            let full_height = ui.available_rect_before_wrap().height();
             ui.horizontal(|ui| {
                 // Left panel - unit selection
                 ui.vertical(|ui| {
                     ui.set_width(250.0);
+                    let max_column_height = full_height;
                     UnitPanel::new(self).show(ui);
-                    ui.separator();
+
+                    // Draggable splitter between attacker and defender panels
+                    let splitter_response = ui.allocate_response(
+                        egui::vec2(ui.available_width(), 6.0),
+                        egui::Sense::click_and_drag(),
+                    );
+                    if splitter_response.hovered() || splitter_response.dragged() {
+                        ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
+                    }
+                    if splitter_response.dragged() {
+                        let delta = splitter_response.drag_delta().y;
+                        self.attacker_panel_height += delta;
+                        self.defender_panel_height -= delta;
+
+                        let splitter_height = 6.0;
+                        let max_combined = (max_column_height - splitter_height).max(160.0);
+                        let total = self.attacker_panel_height + self.defender_panel_height;
+                        if total > max_combined {
+                            let overflow = total - max_combined;
+                            let attacker_ratio = self.attacker_panel_height / total;
+                            self.attacker_panel_height -= overflow * attacker_ratio;
+                            self.defender_panel_height -= overflow * (1.0 - attacker_ratio);
+                        }
+                        self.attacker_panel_height =
+                            self.attacker_panel_height.clamp(80.0, max_combined - 80.0);
+                        self.defender_panel_height =
+                            self.defender_panel_height.clamp(80.0, max_combined - 80.0);
+                    }
+                    ui.painter().rect_filled(
+                        splitter_response.rect,
+                        0.0,
+                        if splitter_response.hovered() || splitter_response.dragged() {
+                            ui.visuals().selection.bg_fill
+                        } else {
+                            ui.visuals().widgets.inactive.weak_bg_fill
+                        },
+                    );
+
                     TargetPanel::new(self).show(ui);
                 });
 
@@ -174,9 +221,7 @@ impl eframe::App for AoSApp {
                     }
 
                     if let Some(result) = &self.current_result {
-                        if !self.is_simulating
-                            && ui.button("SIMULATE (10,000 runs)").clicked()
-                        {
+                        if !self.is_simulating && ui.button("SIMULATE (10,000 runs)").clicked() {
                             self.is_simulating = true;
                             self.simulation_result = None;
                             let (tx, rx) = std::sync::mpsc::channel();
@@ -193,24 +238,23 @@ impl eframe::App for AoSApp {
                                 .find(|u| u.name == attacker)
                                 .cloned()
                                 .unwrap();
-                            let defender_unit = if self.stop_after_wound
-                                && self.selected_defender.is_empty()
-                            {
-                                crate::data::models::Unit {
-                                    id: "none".into(),
-                                    name: "Defender (not selected)".into(),
-                                    faction: "-".into(),
-                                    save: 7,
-                                    ward: None,
-                                    weapons: vec![],
-                                }
-                            } else {
-                                self.units
-                                    .iter()
-                                    .find(|u| u.name == defender)
-                                    .cloned()
-                                    .unwrap()
-                            };
+                            let defender_unit =
+                                if self.stop_after_wound && self.selected_defender.is_empty() {
+                                    crate::data::models::Unit {
+                                        id: "none".into(),
+                                        name: "Defender (not selected)".into(),
+                                        faction: "-".into(),
+                                        save: 7,
+                                        ward: None,
+                                        weapons: vec![],
+                                    }
+                                } else {
+                                    self.units
+                                        .iter()
+                                        .find(|u| u.name == defender)
+                                        .cloned()
+                                        .unwrap()
+                                };
                             let weapon_obj = attacker_unit
                                 .weapons
                                 .iter()
