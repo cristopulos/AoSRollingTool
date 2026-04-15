@@ -31,6 +31,10 @@ pub struct AoSApp {
     pub wound_modifier: i8,
     pub rend_modifier: i8,
     pub damage_modifier: i8,
+    /// Modifies the per-model attack count (e.g., "D6" → "D6+1" or "2" → "4").
+    /// Applied per-model before summing, so with modifier +2 and 5 models:
+    /// "2" attack becomes 5 × 4 = 20 attacks. Ignored when use_attack_override is true.
+    pub attack_modifier: i8,
     pub current_result: Option<CombatResult>,
     pub combat_log: Vec<CombatResult>,
     pub error_message: Option<String>,
@@ -61,6 +65,7 @@ impl AoSApp {
             wound_modifier: 0,
             rend_modifier: 0,
             damage_modifier: 0,
+            attack_modifier: 0,
             current_result: None,
             combat_log: Vec::new(),
             error_message: None,
@@ -142,6 +147,7 @@ impl AoSApp {
                             self.wound_modifier,
                             self.rend_modifier,
                             self.damage_modifier,
+                            self.attack_modifier,
                             None,
                         );
                         self.combat_log.push(result.clone());
@@ -283,6 +289,7 @@ impl eframe::App for AoSApp {
                             let wound_modifier = self.wound_modifier;
                             let rend_modifier = self.rend_modifier;
                             let damage_modifier = self.damage_modifier;
+                            let attack_modifier = self.attack_modifier;
 
                             std::thread::spawn(move || {
                                 let sim = crate::combat::simulation::run_simulation(
@@ -298,6 +305,7 @@ impl eframe::App for AoSApp {
                                     wound_modifier,
                                     rend_modifier,
                                     damage_modifier,
+                                    attack_modifier,
                                     &actual_result,
                                     10_000,
                                 );

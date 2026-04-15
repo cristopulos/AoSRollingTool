@@ -139,6 +139,10 @@ impl<'a> UnitPanel<'a> {
                         ui.label("Damage:");
                         ui.add(egui::DragValue::new(&mut self.app.damage_modifier).range(-3..=3));
                     });
+                    ui.horizontal(|ui| {
+                        ui.label("Attacks:");
+                        ui.add(egui::DragValue::new(&mut self.app.attack_modifier).range(-3..=3));
+                    });
                 });
 
                 // Champion checkbox

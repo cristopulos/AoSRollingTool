@@ -74,11 +74,12 @@ Edit `resources/units.json` to add your own units and weapons:
 
 ### Weapon Stat Modifiers
 
-The UI provides four modifier controls (range: -3 to +3):
+The UI provides five modifier controls (range: -3 to +3):
 - **Hit modifier**: Adjusts the to-hit target (positive = easier to hit)
 - **Wound modifier**: Adjusts the to-wound target (positive = easier to wound)
 - **Rend modifier**: Adjusts effective rend (positive = better armor penetration)
 - **Damage modifier**: Adds to damage output (e.g., `"D3" → "D3+2"` or `"2" → "4"`)
+- **Attacks modifier**: Adds to the per-model attack count (e.g., `"D6" → "D6+1"` or `"2" → "4"`). Applied per-model before the total is computed, so with 5 models and modifier +2: `"2"` → 5 × 4 = 20 attacks. Ignored when using attack override.
 
 ### Critical Hit Effects
 

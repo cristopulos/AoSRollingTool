@@ -40,6 +40,8 @@ pub struct SimulationResult {
 }
 
 /// Run `n_runs` Monte Carlo simulations and compute statistics.
+/// All modifiers (hit_modifier, wound_modifier, rend_modifier, damage_modifier,
+/// attack_modifier) affect each simulation run the same way as in resolve_combat().
 #[allow(clippy::too_many_arguments)]
 pub fn run_simulation(
     attacker: &Unit,
@@ -54,6 +56,7 @@ pub fn run_simulation(
     wound_modifier: i8,
     rend_modifier: i8,
     damage_modifier: i8,
+    attack_modifier: i8,
     actual_result: &CombatResult,
     n_runs: usize,
 ) -> SimulationResult {
@@ -75,6 +78,7 @@ pub fn run_simulation(
                 wound_modifier,
                 rend_modifier,
                 damage_modifier,
+                attack_modifier,
                 None,
             );
             (

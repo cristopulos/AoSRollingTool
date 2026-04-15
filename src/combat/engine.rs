@@ -2,26 +2,39 @@ use crate::combat::dice::{parse_dice_string, roll_d6_batch};
 use crate::combat::types::{CombatResult, DiceRoll, Phase, PhaseResult, WardResult};
 use crate::data::models::{CritEffect, Unit, Weapon};
 
-/// Applies a damage modifier to a damage string, returning a new damage string.
+/// Applies a signed modifier to a numeric or dice string, returning a new string.
 /// e.g., "D3" + 2 -> "D3+2"
 /// e.g., "2" + 1  -> "3"
 /// e.g., "2" - 1  -> "1"
 /// e.g., "D6+2" - 1 -> "D6+1"
-fn apply_damage_modifier(damage_str: &str, modifier: i8) -> String {
+fn apply_modifier(value_str: &str, modifier: i8) -> String {
     if modifier == 0 {
-        return damage_str.to_string();
+        return value_str.to_string();
     }
     // Handle pure numeric strings specially
-    if let Ok(base) = damage_str.parse::<i16>() {
+    if let Ok(base) = value_str.parse::<i16>() {
         let result = (base + modifier as i16).max(1);
         return result.to_string();
     }
     // For dice strings (D6, D3, etc.), append the modifier
     if modifier > 0 {
-        format!("{}+{}", damage_str, modifier)
+        format!("{}+{}", value_str, modifier)
     } else {
-        format!("{}{}", damage_str, modifier)
+        format!("{}{}", value_str, modifier)
     }
+}
+
+/// Applies a damage modifier to a damage string, returning a new damage string.
+fn apply_damage_modifier(damage_str: &str, modifier: i8) -> String {
+    apply_modifier(damage_str, modifier)
+}
+
+/// Applies an attack modifier to an attack string, returning a new attack string.
+/// e.g., "D6" + 1 -> "D6+1"
+/// e.g., "2" + 2  -> "4"
+/// e.g., "D6" - 1 -> "D6-1"
+fn apply_attack_modifier(attack_str: &str, modifier: i8) -> String {
+    apply_modifier(attack_str, modifier)
 }
 
 /// Calculate the save target number.
@@ -200,6 +213,10 @@ fn has_dice(s: &str) -> bool {
 /// Set `stop_after_wound` to true to stop the sequence after the Wound phase.
 /// This returns the hit and wound totals and marks subsequent phases as pending,
 /// allowing the defender to roll saves externally (useful for in-person games).
+///
+/// `attack_modifier` modifies the per-model attack count before summing across models.
+/// e.g., with attack "2" and modifier +2: 5 models × (2+2) = 20 attacks.
+/// For dice expressions: "D6" + 1 -> "D6+1". Ignored when `use_attack_override` is true.
 #[allow(clippy::too_many_arguments)]
 pub fn resolve_combat(
     attacker: &Unit,
@@ -217,6 +234,7 @@ pub fn resolve_combat(
     wound_modifier: i8,
     rend_modifier: i8,
     damage_modifier: i8,
+    attack_modifier: i8,
     provided_rolls: Option<&[u8]>, // For testing only
 ) -> CombatResult {
     // Compute effective values with modifiers
@@ -225,6 +243,7 @@ pub fn resolve_combat(
     let effective_damage = apply_damage_modifier(&weapon.damage, damage_modifier);
 
     // Determine number of attacks
+    let effective_attack_str = apply_attack_modifier(&weapon.attack, attack_modifier);
     let (attacks, attack_variance, hit_description) = if use_attack_override {
         let desc = if hit_modifier != 0 {
             format!(
@@ -246,21 +265,21 @@ pub fn resolve_combat(
         };
         (attack_override, None, desc)
     } else {
-        let (base_attacks, variance) = if has_dice(&weapon.attack) {
+        let (base_attacks, variance) = if has_dice(&effective_attack_str) {
             let results: Vec<u8> = (0..num_models)
-                .map(|_| parse_dice_string(&weapon.attack).unwrap_or(1) as u8)
+                .map(|_| parse_dice_string(&effective_attack_str).unwrap_or(1) as u8)
                 .collect();
             let total = results.iter().map(|&x| x as usize).sum();
             (
                 total,
                 Some(crate::combat::types::VarianceStep::AttackRoll {
-                    per_model: weapon.attack.clone(),
+                    per_model: effective_attack_str.clone(),
                     results,
                     total,
                 }),
             )
         } else {
-            let fixed = parse_dice_string(&weapon.attack).unwrap_or(1) as usize;
+            let fixed = parse_dice_string(&effective_attack_str).unwrap_or(1) as usize;
             (num_models.saturating_mul(fixed), None)
         };
 
@@ -277,7 +296,7 @@ pub fn resolve_combat(
                     weapon.to_hit,
                     effective_to_hit,
                     num_models,
-                    weapon.attack,
+                    effective_attack_str,
                     total_attacks,
                     if hit_modifier > 0 {
                         format!("+{}", hit_modifier)
@@ -291,7 +310,7 @@ pub fn resolve_combat(
                     weapon.to_hit,
                     effective_to_hit,
                     num_models,
-                    weapon.attack,
+                    effective_attack_str,
                     total_attacks,
                     if hit_modifier > 0 {
                         format!("+{}", hit_modifier)
@@ -303,12 +322,12 @@ pub fn resolve_combat(
         } else if has_champion {
             format!(
                 "Hit ({}+) - {} models × {} attacks + 1 champion = {} total",
-                weapon.to_hit, num_models, weapon.attack, total_attacks
+                weapon.to_hit, num_models, effective_attack_str, total_attacks
             )
         } else {
             format!(
                 "Hit ({}+) - {} models × {} attacks = {} total",
-                weapon.to_hit, num_models, weapon.attack, total_attacks
+                weapon.to_hit, num_models, effective_attack_str, total_attacks
             )
         };
 
@@ -594,6 +613,7 @@ pub fn resolve_combat(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::combat::types::VarianceStep;
 
     fn test_weapon() -> Weapon {
         Weapon {
@@ -848,6 +868,7 @@ mod tests {
             0,
             0,
             0,
+            0,          // attack_modifier
             Some(&[6]), // One crit roll
         );
 
@@ -892,6 +913,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -925,6 +947,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[6]),
         );
 
@@ -965,6 +988,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[1; 25]),
         );
 
@@ -1004,6 +1028,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[1; 16]),
         );
 
@@ -1043,6 +1068,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[1; 20]),
         );
 
@@ -1070,6 +1096,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -1112,6 +1139,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -1144,6 +1172,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[1, 2, 3, 4, 6]),
         );
 
@@ -1175,6 +1204,7 @@ mod tests {
             0,
             0,
             0,
+            0, // attack_modifier
             Some(&[6]),
         );
 
@@ -1215,6 +1245,7 @@ mod tests {
             0,                      // wound_modifier
             0,                      // rend_modifier
             0,                      // damage_modifier
+            0,                      // attack_modifier
             Some(&[2, 3, 4, 5, 6]), // All 5 hit on 2+
         );
 
@@ -1252,6 +1283,7 @@ mod tests {
             0,                   // wound_modifier
             0,                   // rend_modifier
             0,                   // damage_modifier
+            0,                   // attack_modifier
             Some(&[3, 4, 5, 6]), // Only [4, 5, 6] hit on 4+
         );
 
@@ -1292,6 +1324,7 @@ mod tests {
             1,                   // wound_modifier: +1
             0,                   // rend_modifier
             0,                   // damage_modifier
+            0,                   // attack_modifier
             Some(&[3, 4, 5, 6]), // 4 hits on 3+
         );
 
@@ -1345,6 +1378,7 @@ mod tests {
             0,                // wound_modifier
             0,                // rend_modifier
             2,                // damage_modifier: +2
+            0,                // attack_modifier
             Some(&[3, 4, 5]), // 3 hits on 3+
         );
 
@@ -1395,11 +1429,201 @@ mod tests {
             0,                      // wound_modifier
             0,                      // rend_modifier
             0,                      // damage_modifier
+            0,                      // attack_modifier
             Some(&[2, 3, 4, 5, 6]), // All 5 should hit (clamped to 1+)
         );
 
         // With hit_modifier: +5, effective to_hit = max(1, 3-5) = 1
         // All rolls >= 1, so all 5 hit
         assert_eq!(result.total_hits, 5);
+    }
+
+    #[test]
+    fn attack_modifier_positive_adds_per_model() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "2".into(),
+            to_hit: 3,
+            to_wound: 4,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            5, // num_models
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            2, // attack_modifier: +2
+            Some(&[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]),
+        );
+
+        // 5 models × (2+2) = 20 attacks
+        assert_eq!(result.phases[0].rolls.len(), 20);
+    }
+
+    #[test]
+    fn attack_modifier_on_dice_attack() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "D6".into(),
+            to_hit: 3,
+            to_wound: 4,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            2, // num_models
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            1,                   // attack_modifier: +1
+            Some(&[3, 3, 3, 3]), // 4 rolls, D6+1 each (2 models)
+        );
+
+        // Variance step should show D6+1
+        if let Some(VarianceStep::AttackRoll { per_model, .. }) = &result.phases[0].variance_step {
+            assert_eq!(per_model, "D6+1");
+        } else {
+            panic!("Expected AttackRoll variance step");
+        }
+    }
+
+    #[test]
+    fn attack_modifier_negative_reduces_per_model() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "2".into(),
+            to_hit: 3,
+            to_wound: 4,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            3, // num_models
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            -1, // attack_modifier: -1
+            Some(&[3, 3, 3]),
+        );
+
+        // 3 models × (2-1) = 3 attacks
+        assert_eq!(result.phases[0].rolls.len(), 3);
+    }
+
+    #[test]
+    fn attack_modifier_clamped_at_one() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "1".into(),
+            to_hit: 3,
+            to_wound: 4,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            3, // num_models
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            -5, // attack_modifier: -5 (should clamp to 1 per model)
+            Some(&[3, 3, 3]),
+        );
+
+        // 3 models × max(1, 1-5) = 3 attacks (clamped at 1)
+        assert_eq!(result.phases[0].rolls.len(), 3);
+    }
+
+    #[test]
+    fn attack_modifier_ignored_when_override() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "2".into(),
+            to_hit: 3,
+            to_wound: 4,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            5,
+            false,
+            true, // use_attack_override
+            5,    // attack_override
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            99, // attack_modifier: +99 (should be ignored)
+            Some(&[3, 3, 3, 3, 3]),
+        );
+
+        // Override uses exactly 5 attacks regardless of modifier
+        assert_eq!(result.phases[0].rolls.len(), 5);
     }
 }
