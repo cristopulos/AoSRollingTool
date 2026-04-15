@@ -50,6 +50,10 @@ pub fn run_simulation(
     use_attack_override: bool,
     attack_override: usize,
     include_ward: bool,
+    hit_modifier: i8,
+    wound_modifier: i8,
+    rend_modifier: i8,
+    damage_modifier: i8,
     actual_result: &CombatResult,
     n_runs: usize,
 ) -> SimulationResult {
@@ -67,6 +71,10 @@ pub fn run_simulation(
                 attack_override,
                 include_ward,
                 false, // never stop early in simulation
+                hit_modifier,
+                wound_modifier,
+                rend_modifier,
+                damage_modifier,
                 None,
             );
             (

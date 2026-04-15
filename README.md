@@ -66,11 +66,19 @@ Edit `resources/units.json` to add your own units and weapons:
 
 ## Combat Rules Implemented
 
-1. **Hit**: Roll D6 per attack. 6 = critical hit (weapon-specific effect).
-2. **Wound**: Roll D6 per hit. Target is the weapon's `to_wound` value.
-3. **Save**: Roll D6 per wound. Target is `defender.save - weapon.rend`. If target > 6, auto-fail.
-4. **Damage**: Unsaved wounds × weapon damage.
+1. **Hit**: Roll D6 per attack. 6 = critical hit (weapon-specific effect). Target can be modified by weapon modifiers.
+2. **Wound**: Roll D6 per hit. Target is the weapon's `to_wound` value, adjustable via modifiers.
+3. **Save**: Roll D6 per wound. Target is `defender.save - weapon.rend`. Modifiers can adjust effective rend. If target > 6, auto-fail.
+4. **Damage**: Unsaved wounds × weapon damage. Damage can be modified (flat values and dice expressions both supported).
 5. **Ward** (optional): D6 per damage point. Target is defender's ward value.
+
+### Weapon Stat Modifiers
+
+The UI provides four modifier controls (range: -3 to +3):
+- **Hit modifier**: Adjusts the to-hit target (positive = easier to hit)
+- **Wound modifier**: Adjusts the to-wound target (positive = easier to wound)
+- **Rend modifier**: Adjusts effective rend (positive = better armor penetration)
+- **Damage modifier**: Adds to damage output (e.g., `"D3" → "D3+2"` or `"2" → "4"`)
 
 ### Critical Hit Effects
 

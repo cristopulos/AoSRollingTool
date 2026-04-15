@@ -27,6 +27,10 @@ pub struct AoSApp {
     pub defender_search: String,
     pub attacker_panel_height: f32,
     pub defender_panel_height: f32,
+    pub hit_modifier: i8,
+    pub wound_modifier: i8,
+    pub rend_modifier: i8,
+    pub damage_modifier: i8,
     pub current_result: Option<CombatResult>,
     pub combat_log: Vec<CombatResult>,
     pub error_message: Option<String>,
@@ -53,6 +57,10 @@ impl AoSApp {
             defender_search: String::new(),
             attacker_panel_height: 260.0,
             defender_panel_height: 140.0,
+            hit_modifier: 0,
+            wound_modifier: 0,
+            rend_modifier: 0,
+            damage_modifier: 0,
             current_result: None,
             combat_log: Vec::new(),
             error_message: None,
@@ -130,6 +138,10 @@ impl AoSApp {
                             self.attack_override,
                             self.include_ward,
                             self.stop_after_wound,
+                            self.hit_modifier,
+                            self.wound_modifier,
+                            self.rend_modifier,
+                            self.damage_modifier,
                             None,
                         );
                         self.combat_log.push(result.clone());
@@ -267,6 +279,10 @@ impl eframe::App for AoSApp {
                             let use_attack_override = self.use_attack_override;
                             let attack_override = self.attack_override;
                             let include_ward = self.include_ward;
+                            let hit_modifier = self.hit_modifier;
+                            let wound_modifier = self.wound_modifier;
+                            let rend_modifier = self.rend_modifier;
+                            let damage_modifier = self.damage_modifier;
 
                             std::thread::spawn(move || {
                                 let sim = crate::combat::simulation::run_simulation(
@@ -278,6 +294,10 @@ impl eframe::App for AoSApp {
                                     use_attack_override,
                                     attack_override,
                                     include_ward,
+                                    hit_modifier,
+                                    wound_modifier,
+                                    rend_modifier,
+                                    damage_modifier,
                                     &actual_result,
                                     10_000,
                                 );

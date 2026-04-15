@@ -120,6 +120,27 @@ impl<'a> UnitPanel<'a> {
                     });
                 }
 
+                // Modifiers section
+                ui.separator();
+                ui.collapsing("Modifiers", |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label("Hit:");
+                        ui.add(egui::DragValue::new(&mut self.app.hit_modifier).range(-3..=3));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Wound:");
+                        ui.add(egui::DragValue::new(&mut self.app.wound_modifier).range(-3..=3));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Rend:");
+                        ui.add(egui::DragValue::new(&mut self.app.rend_modifier).range(-3..=3));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Damage:");
+                        ui.add(egui::DragValue::new(&mut self.app.damage_modifier).range(-3..=3));
+                    });
+                });
+
                 // Champion checkbox
                 ui.separator();
                 ui.checkbox(&mut self.app.has_champion, "Champion (+1 attack)");

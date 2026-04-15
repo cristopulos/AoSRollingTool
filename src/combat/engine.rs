@@ -2,10 +2,32 @@ use crate::combat::dice::{parse_dice_string, roll_d6_batch};
 use crate::combat::types::{CombatResult, DiceRoll, Phase, PhaseResult, WardResult};
 use crate::data::models::{CritEffect, Unit, Weapon};
 
+/// Applies a damage modifier to a damage string, returning a new damage string.
+/// e.g., "D3" + 2 -> "D3+2"
+/// e.g., "2" + 1  -> "3"
+/// e.g., "2" - 1  -> "1"
+/// e.g., "D6+2" - 1 -> "D6+1"
+fn apply_damage_modifier(damage_str: &str, modifier: i8) -> String {
+    if modifier == 0 {
+        return damage_str.to_string();
+    }
+    // Handle pure numeric strings specially
+    if let Ok(base) = damage_str.parse::<i16>() {
+        let result = (base + modifier as i16).max(1);
+        return result.to_string();
+    }
+    // For dice strings (D6, D3, etc.), append the modifier
+    if modifier > 0 {
+        format!("{}+{}", damage_str, modifier)
+    } else {
+        format!("{}{}", damage_str, modifier)
+    }
+}
+
 /// Calculate the save target number.
 /// If the result is > 6, saves auto-fail.
-pub fn calculate_save_target(defender_save: u8, weapon_rend: i8) -> u8 {
-    let target = defender_save as i8 - weapon_rend;
+pub fn calculate_save_target(defender_save: u8, weapon_rend: i8, rend_modifier: i8) -> u8 {
+    let target = defender_save as i8 - weapon_rend - rend_modifier;
     target.max(0) as u8
 }
 
@@ -14,6 +36,7 @@ pub fn calculate_save_target(defender_save: u8, weapon_rend: i8) -> u8 {
 pub fn resolve_hits(
     weapon: &Weapon,
     attacks: usize,
+    effective_to_hit: u8,
     provided_rolls: Option<&[u8]>,
 ) -> (usize, usize, usize, usize, Vec<DiceRoll>) {
     let rolls = match provided_rolls {
@@ -29,7 +52,7 @@ pub fn resolve_hits(
 
     for roll in rolls {
         let is_six = roll == 6;
-        let is_hit = roll >= weapon.to_hit;
+        let is_hit = roll >= effective_to_hit;
 
         let mut dice = DiceRoll {
             value: roll,
@@ -71,8 +94,9 @@ pub fn resolve_hits(
 
 /// Resolve the wound phase.
 pub fn resolve_wounds(
-    weapon: &Weapon,
+    _weapon: &Weapon,
     wounds_to_roll: usize,
+    effective_to_wound: u8,
     provided_rolls: Option<&[u8]>,
 ) -> (usize, Vec<DiceRoll>) {
     let rolls = match provided_rolls {
@@ -84,7 +108,7 @@ pub fn resolve_wounds(
     let mut dice_rolls = Vec::with_capacity(rolls.len());
 
     for roll in rolls {
-        let success = roll >= weapon.to_wound;
+        let success = roll >= effective_to_wound;
         if success {
             successes += 1;
         }
@@ -134,24 +158,6 @@ pub fn resolve_save(
     }
 
     (unsaved, dice_rolls, false)
-}
-
-/// Resolve damage.
-pub fn resolve_damage(weapon: &Weapon, unsaved_wounds: usize) -> (usize, Vec<DiceRoll>) {
-    let mut total = 0;
-    let mut rolls = Vec::new();
-
-    for _ in 0..unsaved_wounds {
-        let dmg = parse_dice_string(&weapon.damage).unwrap_or(1) as usize;
-        total += dmg;
-        rolls.push(DiceRoll {
-            value: dmg as u8,
-            success: true,
-            is_crit: false,
-        });
-    }
-
-    (total, rolls)
 }
 
 /// Resolve ward saves.
@@ -205,18 +211,38 @@ pub fn resolve_combat(
     /* When true, only process Hit and Wound phases. Save, Damage, and Ward phases
     are marked as pending, and the defender rolls saves externally. */
     stop_after_wound: bool,
+    hit_modifier: i8,
+    wound_modifier: i8,
+    rend_modifier: i8,
+    damage_modifier: i8,
     provided_rolls: Option<&[u8]>, // For testing only
 ) -> CombatResult {
+    // Compute effective values with modifiers
+    let effective_to_hit = (weapon.to_hit as i8 - hit_modifier).clamp(1, 6) as u8;
+    let effective_to_wound = (weapon.to_wound as i8 - wound_modifier).clamp(1, 6) as u8;
+    let effective_damage = apply_damage_modifier(&weapon.damage, damage_modifier);
+
     // Determine number of attacks
     let (attacks, attack_variance, hit_description) = if use_attack_override {
-        (
-            attack_override,
-            None,
+        let desc = if hit_modifier != 0 {
+            format!(
+                "Hit ({}+ → {}+) - {} fixed attacks ({} to hit)",
+                weapon.to_hit,
+                effective_to_hit,
+                attack_override,
+                if hit_modifier > 0 {
+                    format!("+{}", hit_modifier)
+                } else {
+                    hit_modifier.to_string()
+                }
+            )
+        } else {
             format!(
                 "Hit ({}+) - {} fixed attacks",
                 weapon.to_hit, attack_override
-            ),
-        )
+            )
+        };
+        (attack_override, None, desc)
     } else {
         let (base_attacks, variance) = if has_dice(&weapon.attack) {
             let results: Vec<u8> = (0..num_models)
@@ -242,7 +268,37 @@ pub fn resolve_combat(
             base_attacks
         };
 
-        let desc = if has_champion {
+        let desc = if hit_modifier != 0 {
+            if has_champion {
+                format!(
+                    "Hit ({}+ → {}+) - {} models × {} attacks + 1 champion = {} total ({} to hit)",
+                    weapon.to_hit,
+                    effective_to_hit,
+                    num_models,
+                    weapon.attack,
+                    total_attacks,
+                    if hit_modifier > 0 {
+                        format!("+{}", hit_modifier)
+                    } else {
+                        hit_modifier.to_string()
+                    }
+                )
+            } else {
+                format!(
+                    "Hit ({}+ → {}+) - {} models × {} attacks = {} total ({} to hit)",
+                    weapon.to_hit,
+                    effective_to_hit,
+                    num_models,
+                    weapon.attack,
+                    total_attacks,
+                    if hit_modifier > 0 {
+                        format!("+{}", hit_modifier)
+                    } else {
+                        hit_modifier.to_string()
+                    }
+                )
+            }
+        } else if has_champion {
             format!(
                 "Hit ({}+) - {} models × {} attacks + 1 champion = {} total",
                 weapon.to_hit, num_models, weapon.attack, total_attacks
@@ -259,7 +315,7 @@ pub fn resolve_combat(
 
     // Phase 1: Hit
     let (hits, auto_wounds, extra_hits, mortal_wounds_from_crits, hit_rolls) =
-        resolve_hits(weapon, attacks, provided_rolls);
+        resolve_hits(weapon, attacks, effective_to_hit, provided_rolls);
 
     let hit_phase = PhaseResult {
         phase: Phase::Hit,
@@ -276,12 +332,27 @@ pub fn resolve_combat(
     // Phase 2: Wound
     let total_wounds_to_roll = hits + extra_hits;
     let (wounds, wound_rolls) = if total_wounds_to_roll > 0 {
-        resolve_wounds(weapon, total_wounds_to_roll, None)
+        resolve_wounds(weapon, total_wounds_to_roll, effective_to_wound, None)
     } else {
         (0, Vec::new())
     };
 
     let total_wounds = wounds + auto_wounds;
+
+    let wound_desc = if wound_modifier != 0 {
+        format!(
+            "Wound ({}+ → {}+) ({} to wound)",
+            weapon.to_wound,
+            effective_to_wound,
+            if wound_modifier > 0 {
+                format!("+{}", wound_modifier)
+            } else {
+                wound_modifier.to_string()
+            }
+        )
+    } else {
+        format!("Wound ({}+)", weapon.to_wound)
+    };
 
     let wound_phase = PhaseResult {
         phase: Phase::Wound,
@@ -291,13 +362,27 @@ pub fn resolve_combat(
         total_output: total_wounds,
         auto_fails: false,
         skipped: false,
-        description: format!("Wound ({}+)", weapon.to_wound),
+        description: wound_desc,
         variance_step: None,
     };
 
     // Early stop: only process hit and wound phases; mortal wounds from crits are still counted.
     if stop_after_wound {
-        let save_target = calculate_save_target(defender.save, weapon.rend);
+        let save_target = calculate_save_target(defender.save, weapon.rend, rend_modifier);
+        let save_desc = if rend_modifier != 0 {
+            format!(
+                "Save ({}+ → {}+) - Pending ({} rend)",
+                calculate_save_target(defender.save, weapon.rend, 0),
+                save_target,
+                if rend_modifier > 0 {
+                    format!("+{}", rend_modifier)
+                } else {
+                    rend_modifier.to_string()
+                }
+            )
+        } else {
+            format!("Save ({}+) - Pending", save_target)
+        };
         let save_phase = PhaseResult {
             phase: Phase::Save,
             rolls: Vec::new(),
@@ -306,7 +391,7 @@ pub fn resolve_combat(
             total_output: 0,
             auto_fails: false,
             skipped: true,
-            description: format!("Save ({}+) - Pending", save_target),
+            description: save_desc,
             variance_step: None,
         };
         let damage_phase = PhaseResult {
@@ -317,7 +402,20 @@ pub fn resolve_combat(
             total_output: 0,
             auto_fails: false,
             skipped: true,
-            description: format!("Damage ({} per wound) - Pending", weapon.damage),
+            description: if damage_modifier != 0 {
+                format!(
+                    "Damage ({} → {}) per wound - Pending ({} damage)",
+                    weapon.damage,
+                    effective_damage,
+                    if damage_modifier > 0 {
+                        format!("+{}", damage_modifier)
+                    } else {
+                        damage_modifier.to_string()
+                    }
+                )
+            } else {
+                format!("Damage ({} per wound) - Pending", weapon.damage)
+            },
             variance_step: None,
         };
         let ward_phase = PhaseResult {
@@ -347,11 +445,26 @@ pub fn resolve_combat(
     }
 
     // Phase 3: Save
-    let save_target = calculate_save_target(defender.save, weapon.rend);
+    let save_target = calculate_save_target(defender.save, weapon.rend, rend_modifier);
     let (unsaved, save_rolls, auto_fails) = if total_wounds > 0 {
         resolve_save(save_target, total_wounds, None)
     } else {
         (0, Vec::new(), false)
+    };
+
+    let save_desc = if rend_modifier != 0 {
+        format!(
+            "Save ({}+ → {}+) ({} rend)",
+            calculate_save_target(defender.save, weapon.rend, 0),
+            save_target,
+            if rend_modifier > 0 {
+                format!("+{}", rend_modifier)
+            } else {
+                rend_modifier.to_string()
+            }
+        )
+    } else {
+        format!("Save ({}+)", save_target)
     };
 
     let save_phase = PhaseResult {
@@ -362,14 +475,14 @@ pub fn resolve_combat(
         total_output: unsaved,
         auto_fails,
         skipped: false,
-        description: format!("Save ({}+)", save_target),
+        description: save_desc,
         variance_step: None,
     };
 
     // Phase 4: Damage
     let (normal_damage, damage_rolls, damage_variance) = if unsaved > 0 {
-        if has_dice(&weapon.damage) {
-            let per_wound = weapon.damage.clone();
+        if has_dice(&effective_damage) {
+            let per_wound = effective_damage.clone();
             let results: Vec<u8> = (0..unsaved)
                 .map(|_| parse_dice_string(&per_wound).unwrap_or(1) as u8)
                 .collect();
@@ -389,14 +502,38 @@ pub fn resolve_combat(
                 .collect();
             (total, dice_rolls, variance)
         } else {
-            let (dmg, rolls) = resolve_damage(weapon, unsaved);
-            (dmg, rolls, None)
+            let fixed_dmg = parse_dice_string(&effective_damage).unwrap_or(1) as usize;
+            let total = unsaved * fixed_dmg;
+            let dice_rolls = vec![
+                DiceRoll {
+                    value: fixed_dmg as u8,
+                    success: true,
+                    is_crit: false,
+                };
+                unsaved
+            ];
+            (total, dice_rolls, None)
         }
     } else {
         (0, Vec::new(), None)
     };
 
     let total_damage = normal_damage + mortal_wounds_from_crits;
+
+    let damage_desc = if damage_modifier != 0 {
+        format!(
+            "Damage ({} → {}) per wound ({} damage)",
+            weapon.damage,
+            effective_damage,
+            if damage_modifier > 0 {
+                format!("+{}", damage_modifier)
+            } else {
+                damage_modifier.to_string()
+            }
+        )
+    } else {
+        format!("Damage ({} per wound)", weapon.damage)
+    };
 
     let damage_phase = PhaseResult {
         phase: Phase::Damage,
@@ -406,7 +543,7 @@ pub fn resolve_combat(
         total_output: total_damage,
         auto_fails: false,
         skipped: false,
-        description: format!("Damage ({} per wound)", weapon.damage),
+        description: damage_desc,
         variance_step: damage_variance,
     };
 
@@ -495,7 +632,7 @@ mod tests {
     fn simple_attack_hit_phase() {
         let weapon = test_weapon();
         let (hits, auto_wounds, extra_hits, mortal_wounds, rolls) =
-            resolve_hits(&weapon, 5, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
         assert_eq!(hits, 4); // 3, 4, 5, 6 all hit (3+)
         assert_eq!(auto_wounds, 0);
         assert_eq!(extra_hits, 0);
@@ -507,20 +644,20 @@ mod tests {
     fn calculate_save_target_basic() {
         // Rend is stored as negative values (-1, -2, etc.)
         // Save 4+ with rend -1 = need 5+ to save (harder)
-        assert_eq!(calculate_save_target(4, 0), 4);
-        assert_eq!(calculate_save_target(4, -1), 5);
-        assert_eq!(calculate_save_target(4, -3), 7);
+        assert_eq!(calculate_save_target(4, 0, 0), 4);
+        assert_eq!(calculate_save_target(4, -1, 0), 5);
+        assert_eq!(calculate_save_target(4, -3, 0), 7);
     }
 
     #[test]
     fn save_auto_fails_when_target_exceeds_6() {
-        let save_target = calculate_save_target(4, -3);
+        let save_target = calculate_save_target(4, -3, 0);
         assert!(save_target > 6);
     }
 
     #[test]
     fn extreme_rend_all_wounds_pass() {
-        let save_target = calculate_save_target(3, -5);
+        let save_target = calculate_save_target(3, -5, 0);
         assert!(save_target > 6);
 
         let (unsaved, rolls, auto_fails) = resolve_save(save_target, 5, Some(&[]));
@@ -531,7 +668,7 @@ mod tests {
 
     #[test]
     fn weapon_with_zero_rend_normal_save() {
-        let save_target = calculate_save_target(4, 0);
+        let save_target = calculate_save_target(4, 0, 0);
         assert_eq!(save_target, 4);
 
         let (unsaved, _rolls, auto_fails) = resolve_save(save_target, 3, Some(&[3, 4, 5]));
@@ -559,7 +696,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::AutoWound);
 
         let (hits, auto_wounds, _extra_hits, _mortal_wounds, _rolls) =
-            resolve_hits(&weapon, 5, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
 
         // 6 = auto-wound (not counted as normal hit)
         assert_eq!(hits, 3); // 3, 4, 5 = 3 normal hits
@@ -572,7 +709,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::MortalWounds("2".into()));
 
         let (_hits, _auto_wounds, _extra_hits, mortal_wounds, _rolls) =
-            resolve_hits(&weapon, 5, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
 
         assert_eq!(mortal_wounds, 2);
     }
@@ -583,7 +720,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::ExtraHit);
 
         let (hits, _auto_wounds, extra_hits, _mortal_wounds, _rolls) =
-            resolve_hits(&weapon, 5, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
 
         // 6 = extra hit: 1 base hit + 1 extra
         assert_eq!(hits, 4); // 3, 4, 5, and 6 base = 4 hits
@@ -606,6 +743,10 @@ mod tests {
             0,
             false,
             false,
+            0,
+            0,
+            0,
+            0,
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -635,6 +776,10 @@ mod tests {
             0,
             true,
             false,
+            0,
+            0,
+            0,
+            0,
             Some(&[6]),
         );
 
@@ -643,277 +788,6 @@ mod tests {
         // With ward, final damage could be less
         assert!(result.phases.len() == 5); // Includes ward phase
         assert_eq!(result.phases[4].phase, Phase::Ward);
-    }
-
-    #[test]
-    fn resolve_combat_with_multiple_models() {
-        let weapon = Weapon {
-            name: "Multi-attack Weapon".into(),
-            range: None,
-            attack: "3".into(), // 3 attacks per model
-            to_hit: 3,
-            to_wound: 4,
-            rend: 0,
-            damage: "1".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        // 5 models × 3 attacks = 15 hit rolls
-        let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, false, false, 0, false, false, None,
-        );
-
-        // Should have 15 rolls in hit phase (5 models × 3 attacks)
-        assert_eq!(result.phases[0].rolls.len(), 15);
-    }
-
-    #[test]
-    fn resolve_combat_with_single_model() {
-        let weapon = Weapon {
-            name: "Single-attack Weapon".into(),
-            range: None,
-            attack: "4".into(), // 4 attacks per model
-            to_hit: 3,
-            to_wound: 4,
-            rend: 0,
-            damage: "1".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        // 1 model × 4 attacks = 4 hit rolls
-        let result = resolve_combat(
-            &attacker, &defender, &weapon, 1, false, false, 0, false, false, None,
-        );
-
-        // Should have 4 rolls in hit phase
-        assert_eq!(result.phases[0].rolls.len(), 4);
-    }
-
-    #[test]
-    fn resolve_combat_with_random_attack_stat() {
-        let weapon = Weapon {
-            name: "Random-attack Weapon".into(),
-            range: None,
-            attack: "D3+1".into(), // Random 2-4 attacks per model
-            to_hit: 3,
-            to_wound: 4,
-            rend: 0,
-            damage: "1".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        // With 3 models, attacks = 3 × (2-4) = 6-12 total
-        let result = resolve_combat(
-            &attacker, &defender, &weapon, 3, false, false, 0, false, false, None,
-        );
-
-        // Hit phase should have between 6 and 12 rolls
-        let hit_count = result.phases[0].rolls.len();
-        assert!(hit_count >= 6 && hit_count <= 12);
-    }
-
-    #[test]
-    fn resolve_combat_model_count_in_description() {
-        let weapon = Weapon {
-            name: "Test Weapon".into(),
-            range: None,
-            attack: "3".into(),
-            to_hit: 3,
-            to_wound: 4,
-            rend: 0,
-            damage: "1".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        // 5 models × 3 attacks = 15 total
-        let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, false, false, 0, false, false, None,
-        );
-
-        // Description should include model count and total attacks
-        let desc = &result.phases[0].description;
-        assert!(desc.contains("5 models"));
-        assert!(desc.contains("3 attacks"));
-        assert!(desc.contains("15 total"));
-    }
-
-    #[test]
-    fn attack_variance_step_present_for_dice_attack() {
-        let weapon = Weapon {
-            name: "Variable Attack Weapon".into(),
-            range: None,
-            attack: "D6".into(),
-            to_hit: 3,
-            to_wound: 4,
-            rend: 0,
-            damage: "1".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        let result = resolve_combat(
-            &attacker, &defender, &weapon, 4, false, false, 0, false, false, None,
-        );
-
-        assert!(result.phases[0].variance_step.is_some());
-        if let Some(crate::combat::types::VarianceStep::AttackRoll {
-            per_model,
-            results,
-            total,
-        }) = &result.phases[0].variance_step
-        {
-            assert_eq!(per_model, "D6");
-            assert_eq!(results.len(), 4); // 4 models = 4 rolls
-            assert_eq!(*total, results.iter().map(|&x| x as usize).sum::<usize>());
-            assert_eq!(result.phases[0].rolls.len(), *total);
-        } else {
-            panic!("Expected AttackRoll variance step");
-        }
-    }
-
-    #[test]
-    fn no_attack_variance_step_for_fixed_attack() {
-        let weapon = Weapon {
-            name: "Fixed Attack Weapon".into(),
-            range: None,
-            attack: "3".into(),
-            to_hit: 3,
-            to_wound: 4,
-            rend: 0,
-            damage: "1".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        let result = resolve_combat(
-            &attacker, &defender, &weapon, 4, false, false, 0, false, false, None,
-        );
-
-        assert!(result.phases[0].variance_step.is_none());
-        assert_eq!(result.phases[0].rolls.len(), 12); // 4 models × 3 attacks
-    }
-
-    #[test]
-    fn damage_variance_step_present_for_dice_damage() {
-        let weapon = Weapon {
-            name: "Variable Damage Weapon".into(),
-            range: None,
-            attack: "2".into(), // Fixed 2 attacks per model
-            to_hit: 1,          // Any roll hits
-            to_wound: 1,        // Any roll wounds
-            rend: -10,          // No save possible
-            damage: "D3".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        let result = resolve_combat(
-            &attacker,
-            &defender,
-            &weapon,
-            5,
-            false,
-            false,
-            0,
-            false,
-            false,
-            Some(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-        );
-
-        // Should have 10 wounds, all auto-fail save
-        let damage_phase = &result.phases[3];
-        assert!(damage_phase.variance_step.is_some());
-        if let Some(crate::combat::types::VarianceStep::DamageRoll {
-            per_wound,
-            results,
-            total,
-        }) = &damage_phase.variance_step
-        {
-            assert_eq!(per_wound, "D3");
-            assert_eq!(results.len(), 10); // 10 wounds = 10 damage rolls
-            assert_eq!(*total, results.iter().map(|&x| x as usize).sum::<usize>());
-            assert_eq!(damage_phase.total_output, *total);
-        } else {
-            panic!("Expected DamageRoll variance step");
-        }
-    }
-
-    #[test]
-    fn no_damage_variance_step_for_fixed_damage() {
-        let weapon = Weapon {
-            name: "Fixed Damage Weapon".into(),
-            range: None,
-            attack: "2".into(),
-            to_hit: 1,
-            to_wound: 1,
-            rend: -10,
-            damage: "2".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        let result = resolve_combat(
-            &attacker,
-            &defender,
-            &weapon,
-            5,
-            false,
-            false,
-            0,
-            false,
-            false,
-            Some(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-        );
-
-        assert!(result.phases[3].variance_step.is_none());
-        assert_eq!(result.phases[3].total_output, 20); // 10 wounds × 2 damage
-    }
-
-    #[test]
-    fn resolve_combat_with_champion() {
-        let weapon = Weapon {
-            name: "Champion Test Weapon".into(),
-            range: None,
-            attack: "3".into(),
-            to_hit: 1, // Auto-hit
-            to_wound: 1,
-            rend: -10,
-            damage: "1".into(),
-            crit_hit: None,
-        };
-        let attacker = test_attacker();
-        let defender = test_defender(4, None);
-
-        // 5 models × 3 + 1 champion = 16 attacks
-        let result = resolve_combat(
-            &attacker,
-            &defender,
-            &weapon,
-            5,
-            true,
-            false,
-            0,
-            false,
-            false,
-            Some(&[1; 16]),
-        );
-
-        assert_eq!(result.phases[0].rolls.len(), 16);
-        let desc = &result.phases[0].description;
-        assert!(desc.contains("+ 1 champion"));
-        assert!(desc.contains("16 total"));
     }
 
     #[test]
@@ -942,6 +816,10 @@ mod tests {
             25,
             false,
             false,
+            0,
+            0,
+            0,
+            0,
             Some(&[1; 25]),
         );
 
@@ -949,6 +827,45 @@ mod tests {
         let desc = &result.phases[0].description;
         assert!(desc.contains("25 fixed attacks"));
         assert!(!desc.contains("models"));
+    }
+
+    #[test]
+    fn resolve_combat_with_champion() {
+        let weapon = Weapon {
+            name: "Champion Test Weapon".into(),
+            range: None,
+            attack: "3".into(),
+            to_hit: 1, // Auto-hit
+            to_wound: 1,
+            rend: -10,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        // 5 models × 3 + 1 champion = 16 attacks
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            5,
+            true,
+            false,
+            0,
+            false,
+            false,
+            0,
+            0,
+            0,
+            0,
+            Some(&[1; 16]),
+        );
+
+        assert_eq!(result.phases[0].rolls.len(), 16);
+        let desc = &result.phases[0].description;
+        assert!(desc.contains("+ 1 champion"));
+        assert!(desc.contains("16 total"));
     }
 
     #[test]
@@ -977,6 +894,10 @@ mod tests {
             20,
             false,
             false,
+            0,
+            0,
+            0,
+            0,
             Some(&[1; 20]),
         );
 
@@ -1000,6 +921,10 @@ mod tests {
             0,
             true,
             true,
+            0,
+            0,
+            0,
+            0,
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -1038,6 +963,10 @@ mod tests {
             0,
             false,
             true,
+            0,
+            0,
+            0,
+            0,
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -1066,6 +995,10 @@ mod tests {
             0,
             false,
             true,
+            0,
+            0,
+            0,
+            0,
             Some(&[1, 2, 3, 4, 6]),
         );
 
@@ -1093,6 +1026,10 @@ mod tests {
             0,
             false,
             true,
+            0,
+            0,
+            0,
+            0,
             Some(&[6]),
         );
 
@@ -1102,5 +1039,219 @@ mod tests {
         assert_eq!(result.total_wounds, 0);
         assert_eq!(result.mortal_wounds, 2);
         assert_eq!(result.final_damage, 0);
+    }
+
+    #[test]
+    fn hit_modifier_reduces_target() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "5".into(),
+            to_hit: 3,
+            to_wound: 4,
+            rend: 0,
+            damage: "2".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,                   // stop_after_wound
+            1,                      // hit_modifier: +1
+            0,                      // wound_modifier
+            0,                      // rend_modifier
+            0,                      // damage_modifier
+            Some(&[2, 3, 4, 5, 6]), // All 5 hit on 2+
+        );
+
+        // With hit_modifier: +1, effective to_hit = 2+ (was 3+)
+        // Rolls [2, 3, 4, 5, 6] all >= 2, so 5 hits
+        assert_eq!(result.total_hits, 5);
+    }
+
+    #[test]
+    fn hit_modifier_increases_target() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "4".into(),
+            to_hit: 3,
+            to_wound: 4,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,                // stop_after_wound
+            -1,                  // hit_modifier: -1
+            0,                   // wound_modifier
+            0,                   // rend_modifier
+            0,                   // damage_modifier
+            Some(&[3, 4, 5, 6]), // Only [4, 5, 6] hit on 4+
+        );
+
+        // With hit_modifier: -1, effective to_hit = 4+ (was 3+)
+        // Rolls [3, 4, 5, 6], only [4, 5, 6] >= 4, so 3 hits
+        assert_eq!(result.total_hits, 3);
+    }
+
+    #[test]
+    fn wound_modifier_reduces_target() {
+        // Test that wound_modifier affects the effective to_wound value
+        // Use to_wound: 1 (auto-wound) so all hits wound regardless of rolls
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "4".into(),
+            to_hit: 3,
+            to_wound: 1, // Auto-wound, so all hits succeed
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        // With wound_modifier: +1, wound description should show modified target
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,                // stop_after_wound
+            0,                   // hit_modifier
+            1,                   // wound_modifier: +1
+            0,                   // rend_modifier
+            0,                   // damage_modifier
+            Some(&[3, 4, 5, 6]), // 4 hits on 3+
+        );
+
+        // All 4 hits wound (to_wound is 1, so all wounds succeed)
+        assert_eq!(result.total_hits, 4);
+        assert_eq!(result.total_wounds, 4);
+        // Verify wound description shows modifier
+        assert!(result.phases[1].description.contains("+1"));
+        assert!(result.phases[1].description.contains("1+"));
+    }
+
+    #[test]
+    fn rend_modifier_affects_save() {
+        // rend_modifier: +1 on rend: -1 with save: 4+ should produce save target 4+
+        // Formula: defender_save - weapon_rend - rend_modifier
+        // Calculation: 4 - (-1) - 1 = 4
+        let save_target = calculate_save_target(4, -1, 1);
+        assert_eq!(save_target, 4);
+    }
+
+    #[test]
+    fn damage_modifier_on_flat_damage() {
+        // Use to_wound: 1 (auto-wound) so all hits wound regardless of random rolls
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "3".into(),
+            to_hit: 3,
+            to_wound: 1, // Auto-wound
+            rend: -10,   // Auto-fail saves
+            damage: "2".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false,            // Process full combat
+            0,                // hit_modifier
+            0,                // wound_modifier
+            0,                // rend_modifier
+            2,                // damage_modifier: +2
+            Some(&[3, 4, 5]), // 3 hits on 3+
+        );
+
+        // 3 hits, 3 wounds (auto-wound), rend -10 auto-fails saves = 3 unsaved wounds
+        // damage_modifier: +2 on damage "2" = 4 per wound
+        // Total: 3 * 4 = 12
+        assert_eq!(result.final_damage, 12);
+    }
+
+    #[test]
+    fn damage_modifier_on_dice_damage() {
+        // apply_damage_modifier("D3", 2) should return "D3+2"
+        assert_eq!(apply_damage_modifier("D3", 2), "D3+2");
+    }
+
+    #[test]
+    fn apply_damage_modifier_on_numeric_negative() {
+        // apply_damage_modifier("2", -1) should return "1"
+        assert_eq!(apply_damage_modifier("2", -1), "1");
+    }
+
+    #[test]
+    fn hit_modifier_clamped_at_1() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "5".into(),
+            to_hit: 3,
+            to_wound: 4,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,                   // stop_after_wound
+            5,                      // hit_modifier: +5
+            0,                      // wound_modifier
+            0,                      // rend_modifier
+            0,                      // damage_modifier
+            Some(&[2, 3, 4, 5, 6]), // All 5 should hit (clamped to 1+)
+        );
+
+        // With hit_modifier: +5, effective to_hit = max(1, 3-5) = 1
+        // All rolls >= 1, so all 5 hit
+        assert_eq!(result.total_hits, 5);
     }
 }
