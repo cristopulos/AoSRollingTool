@@ -79,6 +79,15 @@ impl<'a> PhaseResultCard<'a> {
                 });
             }
 
+            if let Some(ref annotation) = self.phase.annotation {
+                ui.label(
+                    egui::RichText::new(annotation)
+                        .weak()
+                        .italics()
+                        .color(egui::Color32::from_rgb(150, 150, 150)),
+                );
+            }
+
             if let Some(sim) = self.simulation {
                 let color = if sim.percentile >= 0.90 {
                     egui::Color32::from_rgb(100, 200, 100) // Green - great roll

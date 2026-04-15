@@ -42,6 +42,9 @@ pub enum VarianceStep {
     },
 }
 
+/// The result of a single combat phase (Hit, Wound, Save, Damage, or Ward).
+/// Contains dice rolls, success/failure counts, and optional annotations
+/// that explain how crit effects contributed to the phase outcome.
 #[derive(Debug, Clone)]
 pub struct PhaseResult {
     #[allow(dead_code)]
@@ -54,6 +57,18 @@ pub struct PhaseResult {
     pub skipped: bool,
     pub description: String,
     pub variance_step: Option<VarianceStep>,
+    /// Human-readable annotation explaining crit effect contributions to this phase.
+    /// Displayed below the phase in the UI breakdown:
+    /// - Wound phase: "(+N extra hit[s])" for ExtraHit crits
+    /// - Save phase: "(+N auto-wound[s])" for AutoWound crits
+    /// - Damage phase: "(+N MW)" for MortalWounds crits
+    pub annotation: Option<String>,
+    /// Number of extra dice this phase received from crit effects.
+    /// - Wound phase: count of ExtraHit crits (each generates an additional wound roll)
+    /// - Save phase: count of AutoWound crits (each bypassed the wound roll)
+    /// - Damage phase: count of MortalWound crits (each dealt damage directly)
+    #[allow(dead_code)]
+    pub crit_extra_count: usize,
 }
 
 #[derive(Debug, Clone)]

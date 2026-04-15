@@ -368,6 +368,8 @@ pub fn resolve_combat(
         skipped: false,
         description: hit_description,
         variance_step: attack_variance,
+        annotation: None,
+        crit_extra_count: 0,
     };
 
     // Phase 2: Wound
@@ -395,6 +397,17 @@ pub fn resolve_combat(
         format!("Wound ({}+)", weapon.to_wound)
     };
 
+    // Wound phase annotation: shows extra hits from crits that participate in wound rolls
+    let wound_annotation = if extra_hits > 0 {
+        Some(format!(
+            "(+{} extra {})",
+            extra_hits,
+            if extra_hits == 1 { "hit" } else { "hits" }
+        ))
+    } else {
+        None
+    };
+
     let wound_phase = PhaseResult {
         phase: Phase::Wound,
         rolls: wound_rolls,
@@ -405,6 +418,8 @@ pub fn resolve_combat(
         skipped: false,
         description: wound_desc,
         variance_step: None,
+        annotation: wound_annotation,
+        crit_extra_count: extra_hits,
     };
 
     // Early stop: only process hit and wound phases; mortal wounds from crits are still counted.
@@ -424,6 +439,16 @@ pub fn resolve_combat(
         } else {
             format!("Save ({}+) - Pending", save_target)
         };
+        // Save phase annotation: shows auto-wounds from crits that bypassed wound rolls
+        let save_annotation = if auto_wounds > 0 {
+            Some(format!(
+                "(+{} auto-wound{})",
+                auto_wounds,
+                if auto_wounds == 1 { "" } else { "s" }
+            ))
+        } else {
+            None
+        };
         let save_phase = PhaseResult {
             phase: Phase::Save,
             rolls: Vec::new(),
@@ -434,6 +459,14 @@ pub fn resolve_combat(
             skipped: true,
             description: save_desc,
             variance_step: None,
+            annotation: save_annotation,
+            crit_extra_count: auto_wounds,
+        };
+        // Damage phase annotation: shows mortal wounds from crits that bypassed wound/save
+        let damage_annotation = if mortal_wounds_from_crits > 0 {
+            Some(format!("(+{} MW)", mortal_wounds_from_crits))
+        } else {
+            None
         };
         let damage_phase = PhaseResult {
             phase: Phase::Damage,
@@ -458,6 +491,8 @@ pub fn resolve_combat(
                 format!("Damage ({} per wound) - Pending", weapon.damage)
             },
             variance_step: None,
+            annotation: damage_annotation,
+            crit_extra_count: mortal_wounds_from_crits,
         };
         let ward_phase = PhaseResult {
             phase: Phase::Ward,
@@ -471,6 +506,8 @@ pub fn resolve_combat(
                 format!("Ward ({}+) - Pending", w)
             }),
             variance_step: None,
+            annotation: None,
+            crit_extra_count: 0,
         };
         return CombatResult {
             attacker_name: attacker.name.clone(),
@@ -508,6 +545,16 @@ pub fn resolve_combat(
         format!("Save ({}+)", save_target)
     };
 
+    // Save phase annotation: shows auto-wounds from crits that bypassed wound rolls
+    let save_annotation = if auto_wounds > 0 {
+        Some(format!(
+            "(+{} auto-wound{})",
+            auto_wounds,
+            if auto_wounds == 1 { "" } else { "s" }
+        ))
+    } else {
+        None
+    };
     let save_phase = PhaseResult {
         phase: Phase::Save,
         rolls: save_rolls,
@@ -518,6 +565,8 @@ pub fn resolve_combat(
         skipped: false,
         description: save_desc,
         variance_step: None,
+        annotation: save_annotation,
+        crit_extra_count: auto_wounds,
     };
 
     // Phase 4: Damage
@@ -576,6 +625,12 @@ pub fn resolve_combat(
         format!("Damage ({} per wound)", weapon.damage)
     };
 
+    // Damage phase annotation: shows mortal wounds from crits that bypassed wound/save
+    let damage_annotation = if mortal_wounds_from_crits > 0 {
+        Some(format!("(+{} MW)", mortal_wounds_from_crits))
+    } else {
+        None
+    };
     let damage_phase = PhaseResult {
         phase: Phase::Damage,
         rolls: damage_rolls,
@@ -586,6 +641,8 @@ pub fn resolve_combat(
         skipped: false,
         description: damage_desc,
         variance_step: damage_variance,
+        annotation: damage_annotation,
+        crit_extra_count: mortal_wounds_from_crits,
     };
 
     let mut phases = vec![hit_phase, wound_phase, save_phase, damage_phase];
@@ -609,6 +666,8 @@ pub fn resolve_combat(
                 skipped: false,
                 description: format!("Ward ({}+)", ward_target),
                 variance_step: None,
+                annotation: None,
+                crit_extra_count: 0,
             });
         }
     }
@@ -2063,5 +2122,506 @@ mod tests {
         assert_eq!(result.mortal_wounds, 1);
         assert_eq!(result.total_hits, 2); // Only non-crit hits
         assert_eq!(result.total_wounds, 2);
+    }
+
+    // === Annotation field tests ===
+
+    #[test]
+    fn wound_phase_annotation_with_one_extra_hit() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::ExtraHit);
+        weapon.attack = "1".into();
+        weapon.to_wound = 1; // Auto-wound to avoid random wound rolls
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]), // One crit roll
+        );
+
+        // Wound phase should have annotation for 1 extra hit
+        let wound_phase = &result.phases[1];
+        assert!(wound_phase.annotation.is_some());
+        assert_eq!(wound_phase.annotation.as_ref().unwrap(), "(+1 extra hit)");
+        assert_eq!(wound_phase.crit_extra_count, 1);
+    }
+
+    #[test]
+    fn wound_phase_annotation_with_multiple_extra_hits() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::ExtraHit);
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6, 6, 6]), // Three crit rolls = 3 extra hits
+        );
+
+        let wound_phase = &result.phases[1];
+        assert!(wound_phase.annotation.is_some());
+        assert_eq!(wound_phase.annotation.as_ref().unwrap(), "(+3 extra hits)");
+        assert_eq!(wound_phase.crit_extra_count, 3);
+    }
+
+    #[test]
+    fn wound_phase_annotation_none_without_extra_hit() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound); // No extra hits, just auto-wounds
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+        );
+
+        let wound_phase = &result.phases[1];
+        assert!(wound_phase.annotation.is_none());
+        assert_eq!(wound_phase.crit_extra_count, 0);
+    }
+
+    #[test]
+    fn save_phase_annotation_with_one_auto_wound() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound);
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false, // Full combat (not stop_after_wound)
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+        );
+
+        // Save phase should have annotation for 1 auto-wound (no 's')
+        let save_phase = &result.phases[2];
+        assert!(save_phase.annotation.is_some());
+        assert_eq!(save_phase.annotation.as_ref().unwrap(), "(+1 auto-wound)");
+        assert_eq!(save_phase.crit_extra_count, 1);
+    }
+
+    #[test]
+    fn save_phase_annotation_with_multiple_auto_wounds() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound);
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6, 6, 6]), // Three auto-wounds
+        );
+
+        // Save phase should have annotation for 3 auto-wounds (with 's')
+        let save_phase = &result.phases[2];
+        assert!(save_phase.annotation.is_some());
+        assert_eq!(save_phase.annotation.as_ref().unwrap(), "(+3 auto-wounds)");
+        assert_eq!(save_phase.crit_extra_count, 3);
+    }
+
+    #[test]
+    fn save_phase_annotation_none_without_auto_wound() {
+        let weapon = test_weapon(); // No crit
+        let mut w = weapon;
+        w.attack = "1".into();
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &w,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[5]), // Normal hit, no crit
+        );
+
+        let save_phase = &result.phases[2];
+        assert!(save_phase.annotation.is_none());
+        assert_eq!(save_phase.crit_extra_count, 0);
+    }
+
+    #[test]
+    fn damage_phase_annotation_with_mortal_wounds() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::MortalWounds);
+        weapon.attack = "1".into();
+        weapon.damage = "2".into(); // MW will deal 2 damage each
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false, // Full combat
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6, 6]), // Two crits = 2 mortal wounds each dealing damage
+        );
+
+        // Damage phase should have annotation for MW
+        let damage_phase = &result.phases[3];
+        assert!(damage_phase.annotation.is_some());
+        assert!(damage_phase.annotation.as_ref().unwrap().contains("MW"));
+        assert!(damage_phase.annotation.as_ref().unwrap().contains("+4")); // 2 MW * 2 damage
+        assert_eq!(damage_phase.crit_extra_count, 4); // 2 MW * 2 damage each
+    }
+
+    #[test]
+    fn damage_phase_annotation_none_without_mortal_wounds() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound); // Not MW
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+        );
+
+        let damage_phase = &result.phases[3];
+        assert!(damage_phase.annotation.is_none());
+        assert_eq!(damage_phase.crit_extra_count, 0);
+    }
+
+    #[test]
+    fn annotation_with_crit_override_extra_hit() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound); // Weapon normally auto-wounds
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,
+            0,
+            0,
+            0,
+            0,
+            0,
+            Some(CritEffect::ExtraHit), // Override to extra hit
+            Some(&[6]),
+        );
+
+        // Override changes to ExtraHit, so wound phase should show extra hit annotation
+        let wound_phase = &result.phases[1];
+        assert!(wound_phase.annotation.is_some());
+        assert!(wound_phase
+            .annotation
+            .as_ref()
+            .unwrap()
+            .contains("extra hit"));
+        assert_eq!(wound_phase.crit_extra_count, 1);
+    }
+
+    #[test]
+    fn annotation_with_crit_override_mortal_wounds() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::ExtraHit); // Weapon normally extra hit
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,
+            Some(CritEffect::MortalWounds), // Override to MW
+            Some(&[6]),
+        );
+
+        // Override changes to MortalWounds, so damage phase should show MW annotation
+        let damage_phase = &result.phases[3];
+        assert!(damage_phase.annotation.is_some());
+        assert!(damage_phase.annotation.as_ref().unwrap().contains("MW"));
+    }
+
+    #[test]
+    fn stop_after_wound_preserves_save_annotation() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound);
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+        );
+
+        // Even with stop_after_wound, save phase should have annotation
+        let save_phase = &result.phases[2];
+        assert!(save_phase.skipped);
+        assert!(save_phase.annotation.is_some());
+        assert_eq!(save_phase.annotation.as_ref().unwrap(), "(+1 auto-wound)");
+        assert_eq!(save_phase.crit_extra_count, 1);
+    }
+
+    #[test]
+    fn stop_after_wound_preserves_damage_annotation_for_mortal_wounds() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::MortalWounds);
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6, 6]), // Two MW
+        );
+
+        // Even with stop_after_wound, damage phase should have annotation for MW
+        let damage_phase = &result.phases[3];
+        assert!(damage_phase.skipped);
+        assert!(damage_phase.annotation.is_some());
+        assert!(damage_phase.annotation.as_ref().unwrap().contains("MW"));
+        assert!(damage_phase.annotation.as_ref().unwrap().contains("+2"));
+        assert_eq!(damage_phase.crit_extra_count, 2);
+    }
+
+    #[test]
+    fn hit_phase_annotation_always_none() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::ExtraHit);
+        weapon.attack = "1".into();
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+        );
+
+        // Hit phase never has annotation (crit effects are shown on subsequent phases)
+        let hit_phase = &result.phases[0];
+        assert!(hit_phase.annotation.is_none());
+        assert_eq!(hit_phase.crit_extra_count, 0);
+    }
+
+    #[test]
+    fn ward_phase_annotation_always_none() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::MortalWounds);
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, Some(5)); // Has ward
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            true, // include_ward
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+        );
+
+        // Ward phase never has annotation
+        let ward_phase = &result.phases[4];
+        assert!(ward_phase.annotation.is_none());
+        assert_eq!(ward_phase.crit_extra_count, 0);
     }
 }
