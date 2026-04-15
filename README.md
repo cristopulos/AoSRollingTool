@@ -8,7 +8,7 @@ A Rust-based desktop application with a GUI for visualizing combat sequence roll
 - **Unit & Weapon Profiles**: Pre-loaded with sample units from major factions
 - **Dice Roll Display**: Color-coded results (green = success, red = fail, gold = crit)
 - **Combat Log**: History of all previous rolls
-- **Critical Hit Support**: Auto-wound, Extra Hit, and Mortal Wounds
+- **Critical Hit Support**: Auto-wound, Extra Hit, and Mortal Wounds (with optional override dropdown)
 - **Ward Saves**: Optional ward phase per unit profile
 - **Stop After Wound**: Checkbox to stop the combat sequence after Hit and Wound phases, allowing the defender to roll saves externally (useful for in-person games where each player rolls their own dice)
 
@@ -74,12 +74,13 @@ Edit `resources/units.json` to add your own units and weapons:
 
 ### Weapon Stat Modifiers
 
-The UI provides five modifier controls (range: -3 to +3):
+The UI provides six modifier controls (range: -3 to +3 for numeric modifiers):
 - **Hit modifier**: Adjusts the to-hit target (positive = easier to hit)
 - **Wound modifier**: Adjusts the to-wound target (positive = easier to wound)
 - **Rend modifier**: Adjusts effective rend (positive = better armor penetration)
 - **Damage modifier**: Adds to damage output (e.g., `"D3" → "D3+2"` or `"2" → "4"`)
 - **Attacks modifier**: Adds to the per-model attack count (e.g., `"D6" → "D6+1"` or `"2" → "4"`). Applied per-model before the total is computed, so with 5 models and modifier +2: `"2"` → 5 × 4 = 20 attacks. Ignored when using attack override.
+- **Crit Effect**: Dropdown override to replace the weapon's built-in critical hit effect. Options are *Default (use weapon)*, *Auto Wound*, *Extra Hit*, *Mortal Wounds*, and *Mortal Wounds (no bonus)*. When *Mortal Wounds* is selected from the override, it borrows the weapon's dice expression if the weapon has a MW crit; otherwise no bonus damage is applied. When an override is active, the weapon stat display shows an `[Override]` prefix.
 
 ### Critical Hit Effects
 

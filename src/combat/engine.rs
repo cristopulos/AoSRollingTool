@@ -46,10 +46,15 @@ pub fn calculate_save_target(defender_save: u8, weapon_rend: i8, rend_modifier: 
 
 /// Resolve the hit phase for a given number of attacks.
 /// Returns (hits, auto_wounds, extra_hits, mortal_wounds, rolls).
+///
+/// `crit_effect_override`: If `Some`, uses this instead of the weapon's built-in crit effect.
+/// - `None` → fall back to `weapon.crit_hit`
+/// - `Some(CritEffect)` → use the override directly
 pub fn resolve_hits(
     weapon: &Weapon,
     attacks: usize,
     effective_to_hit: u8,
+    crit_effect_override: Option<CritEffect>,
     provided_rolls: Option<&[u8]>,
 ) -> (usize, usize, usize, usize, Vec<DiceRoll>) {
     let rolls = match provided_rolls {
@@ -63,6 +68,8 @@ pub fn resolve_hits(
     let mut mortal_wounds = 0;
     let mut dice_rolls = Vec::with_capacity(rolls.len());
 
+    let effective_crit = crit_effect_override.as_ref().or(weapon.crit_hit.as_ref());
+
     for roll in rolls {
         let is_six = roll == 6;
         let is_hit = roll >= effective_to_hit;
@@ -74,7 +81,7 @@ pub fn resolve_hits(
         };
 
         if is_six {
-            match weapon.crit_hit {
+            match effective_crit {
                 Some(CritEffect::AutoWound) => {
                     dice.success = true;
                     auto_wounds += 1;
@@ -235,6 +242,7 @@ pub fn resolve_combat(
     rend_modifier: i8,
     damage_modifier: i8,
     attack_modifier: i8,
+    crit_effect_override: Option<CritEffect>,
     provided_rolls: Option<&[u8]>, // For testing only
 ) -> CombatResult {
     // Compute effective values with modifiers
@@ -335,8 +343,13 @@ pub fn resolve_combat(
     };
 
     // Phase 1: Hit
-    let (hits, auto_wounds, extra_hits, mortal_wounds_from_crits, hit_rolls) =
-        resolve_hits(weapon, attacks, effective_to_hit, provided_rolls);
+    let (hits, auto_wounds, extra_hits, mortal_wounds_from_crits, hit_rolls) = resolve_hits(
+        weapon,
+        attacks,
+        effective_to_hit,
+        crit_effect_override.clone(),
+        provided_rolls,
+    );
 
     let hit_phase = PhaseResult {
         phase: Phase::Hit,
@@ -654,7 +667,7 @@ mod tests {
     fn simple_attack_hit_phase() {
         let weapon = test_weapon();
         let (hits, auto_wounds, extra_hits, mortal_wounds, rolls) =
-            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, None, Some(&[4, 3, 2, 5, 6]));
         assert_eq!(hits, 4); // 3, 4, 5, 6 all hit (3+)
         assert_eq!(auto_wounds, 0);
         assert_eq!(extra_hits, 0);
@@ -718,7 +731,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::AutoWound);
 
         let (hits, auto_wounds, _extra_hits, _mortal_wounds, _rolls) =
-            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, None, Some(&[4, 3, 2, 5, 6]));
 
         // 6 = auto-wound (not counted as normal hit)
         assert_eq!(hits, 3); // 3, 4, 5 = 3 normal hits
@@ -731,7 +744,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::MortalWounds(Some("2".into())));
 
         let (_hits, _auto_wounds, _extra_hits, mortal_wounds, _rolls) =
-            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, None, Some(&[4, 3, 2, 5, 6]));
 
         assert_eq!(mortal_wounds, 2);
     }
@@ -742,7 +755,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::MortalWounds(None));
 
         let (hits, _auto_wounds, _extra_hits, mortal_wounds, _rolls) =
-            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, None, Some(&[4, 3, 2, 5, 6]));
 
         // 6 is a crit mortal wound (no bonus value) and does not add a normal hit
         assert_eq!(hits, 3); // 4, 3, 5 = 3 normal hits
@@ -756,7 +769,7 @@ mod tests {
 
         // Three 6s should generate 3 * 2 = 6 mortal wounds
         let (_hits, _auto_wounds, _extra_hits, mortal_wounds, rolls) =
-            resolve_hits(&weapon, 5, 3, Some(&[6, 6, 6, 4, 5]));
+            resolve_hits(&weapon, 5, 3, None, Some(&[6, 6, 6, 4, 5]));
 
         assert_eq!(mortal_wounds, 6); // 3 sixes * 2 damage each
         assert_eq!(rolls.len(), 5);
@@ -773,7 +786,7 @@ mod tests {
 
         // Use deterministic rolls: 6 (crit) + 4 (normal hit) = 1 D3 roll + 1 normal hit
         let (hits, _auto_wounds, _extra_hits, _mortal_wounds, rolls) =
-            resolve_hits(&weapon, 2, 3, Some(&[6, 4]));
+            resolve_hits(&weapon, 2, 3, None, Some(&[6, 4]));
 
         // 6 = crit with D3 mortal wounds (1-3), 4 = normal hit
         assert_eq!(hits, 1);
@@ -791,7 +804,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::MortalWounds(Some("D6+1".into())));
 
         let (_hits, _auto_wounds, _extra_hits, _mortal_wounds, rolls) =
-            resolve_hits(&weapon, 2, 3, Some(&[6, 5]));
+            resolve_hits(&weapon, 2, 3, None, Some(&[6, 5]));
 
         // 6 = crit, 5 = normal hit
         // D6+1 result is 2-7 (D6 is 1-6, plus 1)
@@ -805,7 +818,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::AutoWound);
 
         let (_hits, _auto_wounds, _extra_hits, _mortal_wounds, rolls) =
-            resolve_hits(&weapon, 5, 3, Some(&[6, 5, 4, 3, 2]));
+            resolve_hits(&weapon, 5, 3, None, Some(&[6, 5, 4, 3, 2]));
 
         assert_eq!(rolls.len(), 5);
         // Only the 6 should be marked as crit
@@ -823,7 +836,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::MortalWounds(Some("INVALID".into())));
 
         let (_hits, _auto_wounds, _extra_hits, mortal_wounds, rolls) =
-            resolve_hits(&weapon, 1, 3, Some(&[6]));
+            resolve_hits(&weapon, 1, 3, None, Some(&[6]));
 
         // Invalid dice string should default to 1 mortal wound
         assert_eq!(mortal_wounds, 1);
@@ -838,7 +851,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::MortalWounds(Some("".into())));
 
         let (_hits, _auto_wounds, _extra_hits, mortal_wounds, rolls) =
-            resolve_hits(&weapon, 1, 3, Some(&[6]));
+            resolve_hits(&weapon, 1, 3, None, Some(&[6]));
 
         // Empty string fails to parse as valid dice, should default to 1
         assert_eq!(mortal_wounds, 1);
@@ -868,7 +881,8 @@ mod tests {
             0,
             0,
             0,
-            0,          // attack_modifier
+            0, // attack_modifier
+            None,
             Some(&[6]), // One crit roll
         );
 
@@ -886,7 +900,7 @@ mod tests {
         weapon.crit_hit = Some(CritEffect::ExtraHit);
 
         let (hits, _auto_wounds, extra_hits, _mortal_wounds, _rolls) =
-            resolve_hits(&weapon, 5, 3, Some(&[4, 3, 2, 5, 6]));
+            resolve_hits(&weapon, 5, 3, None, Some(&[4, 3, 2, 5, 6]));
 
         // 6 = extra hit: 1 base hit + 1 extra
         assert_eq!(hits, 4); // 3, 4, 5, and 6 base = 4 hits
@@ -914,6 +928,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -948,6 +963,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[6]),
         );
 
@@ -989,6 +1005,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[1; 25]),
         );
 
@@ -1029,6 +1046,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[1; 16]),
         );
 
@@ -1069,6 +1087,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[1; 20]),
         );
 
@@ -1097,6 +1116,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -1140,6 +1160,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[4, 5, 6, 3, 2]),
         );
 
@@ -1173,6 +1194,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[1, 2, 3, 4, 6]),
         );
 
@@ -1205,6 +1227,7 @@ mod tests {
             0,
             0,
             0, // attack_modifier
+            None,
             Some(&[6]),
         );
 
@@ -1240,12 +1263,13 @@ mod tests {
             false,
             0,
             false,
-            true,                   // stop_after_wound
-            1,                      // hit_modifier: +1
-            0,                      // wound_modifier
-            0,                      // rend_modifier
-            0,                      // damage_modifier
-            0,                      // attack_modifier
+            true, // stop_after_wound
+            1,    // hit_modifier: +1
+            0,    // wound_modifier
+            0,    // rend_modifier
+            0,    // damage_modifier
+            0,    // attack_modifier
+            None,
             Some(&[2, 3, 4, 5, 6]), // All 5 hit on 2+
         );
 
@@ -1278,12 +1302,13 @@ mod tests {
             false,
             0,
             false,
-            true,                // stop_after_wound
-            -1,                  // hit_modifier: -1
-            0,                   // wound_modifier
-            0,                   // rend_modifier
-            0,                   // damage_modifier
-            0,                   // attack_modifier
+            true, // stop_after_wound
+            -1,   // hit_modifier: -1
+            0,    // wound_modifier
+            0,    // rend_modifier
+            0,    // damage_modifier
+            0,    // attack_modifier
+            None,
             Some(&[3, 4, 5, 6]), // Only [4, 5, 6] hit on 4+
         );
 
@@ -1319,12 +1344,13 @@ mod tests {
             false,
             0,
             false,
-            true,                // stop_after_wound
-            0,                   // hit_modifier
-            1,                   // wound_modifier: +1
-            0,                   // rend_modifier
-            0,                   // damage_modifier
-            0,                   // attack_modifier
+            true, // stop_after_wound
+            0,    // hit_modifier
+            1,    // wound_modifier: +1
+            0,    // rend_modifier
+            0,    // damage_modifier
+            0,    // attack_modifier
+            None,
             Some(&[3, 4, 5, 6]), // 4 hits on 3+
         );
 
@@ -1373,12 +1399,13 @@ mod tests {
             false,
             0,
             false,
-            false,            // Process full combat
-            0,                // hit_modifier
-            0,                // wound_modifier
-            0,                // rend_modifier
-            2,                // damage_modifier: +2
-            0,                // attack_modifier
+            false, // Process full combat
+            0,     // hit_modifier
+            0,     // wound_modifier
+            0,     // rend_modifier
+            2,     // damage_modifier: +2
+            0,     // attack_modifier
+            None,
             Some(&[3, 4, 5]), // 3 hits on 3+
         );
 
@@ -1424,12 +1451,13 @@ mod tests {
             false,
             0,
             false,
-            true,                   // stop_after_wound
-            5,                      // hit_modifier: +5
-            0,                      // wound_modifier
-            0,                      // rend_modifier
-            0,                      // damage_modifier
-            0,                      // attack_modifier
+            true, // stop_after_wound
+            5,    // hit_modifier: +5
+            0,    // wound_modifier
+            0,    // rend_modifier
+            0,    // damage_modifier
+            0,    // attack_modifier
+            None,
             Some(&[2, 3, 4, 5, 6]), // All 5 should hit (clamped to 1+)
         );
 
@@ -1468,6 +1496,7 @@ mod tests {
             0,
             0,
             2, // attack_modifier: +2
+            None,
             Some(&[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]),
         );
 
@@ -1504,7 +1533,8 @@ mod tests {
             0,
             0,
             0,
-            1,                   // attack_modifier: +1
+            1, // attack_modifier: +1
+            None,
             Some(&[3, 3, 3, 3]), // 4 rolls, D6+1 each (2 models)
         );
 
@@ -1546,6 +1576,7 @@ mod tests {
             0,
             0,
             -1, // attack_modifier: -1
+            None,
             Some(&[3, 3, 3]),
         );
 
@@ -1583,6 +1614,7 @@ mod tests {
             0,
             0,
             -5, // attack_modifier: -5 (should clamp to 1 per model)
+            None,
             Some(&[3, 3, 3]),
         );
 
@@ -1620,10 +1652,400 @@ mod tests {
             0,
             0,
             99, // attack_modifier: +99 (should be ignored)
+            None,
             Some(&[3, 3, 3, 3, 3]),
         );
 
         // Override uses exactly 5 attacks regardless of modifier
         assert_eq!(result.phases[0].rolls.len(), 5);
+    }
+
+    #[test]
+    fn crit_override_auto_wound_on_extra_hit_weapon() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::ExtraHit);
+
+        let (hits, auto_wounds, _extra_hits, _mortal_wounds, _rolls) = resolve_hits(
+            &weapon,
+            5,
+            3,
+            Some(CritEffect::AutoWound),
+            Some(&[4, 3, 2, 5, 6]),
+        );
+
+        // 6 should become auto-wound instead of extra hit
+        assert_eq!(hits, 3); // 3, 4, 5 = 3 normal hits
+        assert_eq!(auto_wounds, 1); // 6 = auto-wound
+    }
+
+    #[test]
+    fn crit_override_removes_crit() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound);
+
+        let (hits, auto_wounds, _extra_hits, _mortal_wounds, _rolls) = resolve_hits(
+            &weapon,
+            5,
+            3,
+            Some(CritEffect::MortalWounds(None)),
+            Some(&[4, 3, 2, 5, 6]),
+        );
+
+        // Override to MW(None) means 6 is a successful hit but not auto-wound or extra hit
+        assert_eq!(hits, 3); // 4, 3, 5 = 3 normal hits; 6 is MW(None) (no bonus)
+        assert_eq!(auto_wounds, 0);
+    }
+
+    #[test]
+    fn crit_override_adds_mw_none() {
+        let weapon = test_weapon(); // no crit by default
+
+        let (hits, _auto_wounds, _extra_hits, mortal_wounds, _rolls) = resolve_hits(
+            &weapon,
+            5,
+            3,
+            Some(CritEffect::MortalWounds(None)),
+            Some(&[4, 3, 2, 5, 6]),
+        );
+
+        // 6 counts as success but no bonus mortal wounds
+        assert_eq!(hits, 3);
+        assert_eq!(mortal_wounds, 0);
+    }
+
+    #[test]
+    fn crit_override_adds_mw_with_value() {
+        let weapon = test_weapon(); // no crit by default
+
+        let (_hits, _auto_wounds, _extra_hits, mortal_wounds, _rolls) = resolve_hits(
+            &weapon,
+            5,
+            3,
+            Some(CritEffect::MortalWounds(Some("2".into()))),
+            Some(&[4, 3, 2, 5, 6]),
+        );
+
+        assert_eq!(mortal_wounds, 2);
+    }
+
+    #[test]
+    fn crit_override_uses_weapon_mw_value() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::MortalWounds(Some("D3".into())));
+
+        let (_hits, _auto_wounds, _extra_hits, _mortal_wounds, rolls) = resolve_hits(
+            &weapon,
+            2,
+            3,
+            Some(CritEffect::MortalWounds(Some("D3".into()))),
+            Some(&[6, 4]),
+        );
+
+        let crit_rolls: Vec<_> = rolls.iter().filter(|r| r.is_crit).collect();
+        assert_eq!(crit_rolls.len(), 1);
+        assert!(crit_rolls[0].success);
+    }
+
+    #[test]
+    fn crit_override_in_resolve_combat() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::ExtraHit);
+        weapon.attack = "1".into();
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            0, // attack_modifier
+            Some(CritEffect::AutoWound),
+            Some(&[6]),
+        );
+
+        assert!(result.stopped_after_wound);
+        // Auto-wound from override: 1 hit total (auto-wound counts as hit)
+        assert_eq!(result.total_hits, 1);
+    }
+
+    #[test]
+    fn stop_after_wound_with_crit_extra_hit() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::ExtraHit);
+        weapon.attack = "1".into();
+        weapon.to_wound = 1; // Auto-wound to avoid random wound rolls
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            0,    // attack_modifier
+            None, // no override, use weapon's ExtraHit
+            Some(&[6]),
+        );
+
+        assert!(result.stopped_after_wound);
+        // ExtraHit: 6 = 1 base hit + 1 extra = 2 hits for wound rolls
+        assert_eq!(result.total_hits, 2);
+        assert_eq!(result.total_wounds, 2); // All wound on 1+ (auto-wound)
+    }
+
+    #[test]
+    fn crit_override_extra_hit_with_stop_after_wound() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound); // Weapon normally auto-wounds
+        weapon.to_wound = 1; // Auto-wound to avoid random wound rolls
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            0,                          // attack_modifier
+            Some(CritEffect::ExtraHit), // Override to ExtraHit
+            Some(&[6]),
+        );
+
+        assert!(result.stopped_after_wound);
+        // Override to ExtraHit: 6 = 1 base hit + 1 extra = 2 hits
+        assert_eq!(result.total_hits, 2);
+        // Extra hits don't wound automatically, but to_wound = 1 means auto-wound
+        assert_eq!(result.total_wounds, 2);
+    }
+
+    #[test]
+    fn crit_override_with_champion() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::MortalWounds(Some("2".into())));
+        weapon.attack = "1".into();
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        // Champion adds +1 attack, with 1 model = 2 total attacks
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            true, // has_champion
+            false,
+            0,
+            false,
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,    // attack_modifier
+            None, // no override, use weapon's MW(2)
+            Some(&[6, 6]),
+        );
+
+        // Two 6s with MW(2): first 6 = 2 MW, second 6 = 2 MW = 4 total
+        assert_eq!(result.mortal_wounds, 4);
+        // Verify champion is mentioned in hit description
+        assert!(result.phases[0].description.contains("champion"));
+    }
+
+    #[test]
+    fn crit_override_with_attack_override() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "99".into(), // This should be ignored
+            to_hit: 3,
+            to_wound: 1, // Auto-wound
+            rend: -10,   // Auto-fail saves
+            damage: "1".into(),
+            crit_hit: None, // No weapon crit
+        };
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        // Override attacks to exactly 3
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1, // num_models (should be ignored with override)
+            false,
+            true, // use_attack_override
+            3,    // attack_override
+            false,
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,                           // attack_modifier (should be ignored)
+            Some(CritEffect::AutoWound), // Override to auto-wound
+            Some(&[4, 5, 6]),            // All hit on 3+
+        );
+
+        // 3 attacks, all hit, all are 6 = 3 auto-wounds
+        assert_eq!(result.phases[0].rolls.len(), 3);
+        assert_eq!(result.phases[1].total_output, 3); // 3 auto-wounds
+                                                      // With rend -10, all saves auto-fail, so 3 damage
+        assert_eq!(result.final_damage, 3);
+    }
+
+    #[test]
+    fn crit_override_none_when_weapon_has_crit() {
+        // When override is None, weapon's crit should be used
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::AutoWound);
+
+        let (hits, auto_wounds, _extra_hits, _mortal_wounds, _rolls) = resolve_hits(
+            &weapon,
+            3,
+            3,
+            None, // Override is None - should use weapon's AutoWound
+            Some(&[4, 5, 6]),
+        );
+
+        // 6 = auto-wound, 4,5 = normal hits
+        assert_eq!(hits, 2);
+        assert_eq!(auto_wounds, 1);
+    }
+
+    #[test]
+    fn crit_override_none_when_weapon_has_no_crit() {
+        // When override is None and weapon has no crit, no crit effects
+        let weapon = test_weapon(); // No crit_hit set
+
+        let (hits, auto_wounds, extra_hits, mortal_wounds, _rolls) = resolve_hits(
+            &weapon,
+            3,
+            3,
+            None, // Override is None, weapon has no crit
+            Some(&[4, 5, 6]),
+        );
+
+        // All hit, but 6 is just a normal hit (no crit effect)
+        assert_eq!(hits, 3);
+        assert_eq!(auto_wounds, 0);
+        assert_eq!(extra_hits, 0);
+        assert_eq!(mortal_wounds, 0);
+    }
+
+    #[test]
+    fn crit_override_overrides_weapon_crit_completely() {
+        let mut weapon = test_weapon();
+        weapon.crit_hit = Some(CritEffect::ExtraHit); // Weapon: ExtraHit
+
+        // Override to AutoWound - should completely ignore ExtraHit
+        let (hits, auto_wounds, extra_hits, _mortal_wounds, _rolls) = resolve_hits(
+            &weapon,
+            5,
+            3,
+            Some(CritEffect::AutoWound), // Override: AutoWound
+            Some(&[4, 3, 2, 5, 6]),
+        );
+
+        // 6 = auto-wound (not extra hit), 3,4,5 = normal hits
+        assert_eq!(hits, 3); // 3, 4, 5 = 3 normal hits
+        assert_eq!(auto_wounds, 1); // 6 = auto-wound
+        assert_eq!(extra_hits, 0); // No extra hits (override takes precedence)
+    }
+
+    #[test]
+    fn crit_override_mortal_wounds_none_still_counts_as_crit() {
+        // MW(None) should still mark the roll as a crit and as successful
+        let weapon = test_weapon(); // No crit
+
+        let (_hits, _auto_wounds, _extra_hits, _mortal_wounds, rolls) = resolve_hits(
+            &weapon,
+            5,
+            3,
+            Some(CritEffect::MortalWounds(None)),
+            Some(&[4, 3, 2, 5, 6]),
+        );
+
+        // 6 should be marked as crit even though MW(None) deals no damage
+        let crit_rolls: Vec<_> = rolls.iter().filter(|r| r.is_crit).collect();
+        assert_eq!(crit_rolls.len(), 1);
+        assert!(crit_rolls[0].is_crit);
+        assert!(crit_rolls[0].success); // Still successful hit
+        assert_eq!(crit_rolls[0].value, 6);
+    }
+
+    #[test]
+    fn stop_after_wound_preserves_mortal_wounds_from_crit_override() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "3".into(),
+            to_hit: 3,
+            to_wound: 1, // Auto-wound
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None, // No weapon crit
+        };
+
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            0,
+            Some(CritEffect::MortalWounds(Some("3".into()))), // Override MW(3)
+            Some(&[6, 5, 3]),                                 // 1 crit (6), 2 normal hits (5, 3)
+        );
+
+        assert!(result.stopped_after_wound);
+        // Crit 6 = 3 MW, other 2 hit = 2 wounds (to_wound is 1)
+        assert_eq!(result.mortal_wounds, 3);
+        assert_eq!(result.total_hits, 2); // Only non-crit hits
+        assert_eq!(result.total_wounds, 2);
     }
 }

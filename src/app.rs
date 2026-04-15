@@ -6,7 +6,7 @@ use crate::combat::engine::resolve_combat;
 use crate::combat::simulation::SimulationResult;
 use crate::combat::types::CombatResult;
 use crate::data::loader::load_units_from_path;
-use crate::data::models::Unit;
+use crate::data::models::{CritEffect, Unit};
 use crate::ui::panels::combat_view::CombatView;
 use crate::ui::panels::log_panel::LogPanel;
 use crate::ui::panels::target_panel::TargetPanel;
@@ -35,6 +35,11 @@ pub struct AoSApp {
     /// Applied per-model before summing, so with modifier +2 and 5 models:
     /// "2" attack becomes 5 × 4 = 20 attacks. Ignored when use_attack_override is true.
     pub attack_modifier: i8,
+    /// Overrides the weapon's built-in crit effect when set.
+    pub crit_effect_override: Option<CritEffect>,
+    /// Tracks the last selected weapon name to detect weapon changes.
+    /// When the selected weapon changes, crit_effect_override is reset to None.
+    pub last_selected_weapon: String,
     pub current_result: Option<CombatResult>,
     pub combat_log: Vec<CombatResult>,
     pub error_message: Option<String>,
@@ -66,6 +71,8 @@ impl AoSApp {
             rend_modifier: 0,
             damage_modifier: 0,
             attack_modifier: 0,
+            crit_effect_override: None,
+            last_selected_weapon: String::new(),
             current_result: None,
             combat_log: Vec::new(),
             error_message: None,
@@ -148,6 +155,7 @@ impl AoSApp {
                             self.rend_modifier,
                             self.damage_modifier,
                             self.attack_modifier,
+                            self.crit_effect_override.clone(),
                             None,
                         );
                         self.combat_log.push(result.clone());
@@ -290,6 +298,7 @@ impl eframe::App for AoSApp {
                             let rend_modifier = self.rend_modifier;
                             let damage_modifier = self.damage_modifier;
                             let attack_modifier = self.attack_modifier;
+                            let crit_effect_override = self.crit_effect_override.clone();
 
                             std::thread::spawn(move || {
                                 let sim = crate::combat::simulation::run_simulation(
@@ -306,6 +315,7 @@ impl eframe::App for AoSApp {
                                     rend_modifier,
                                     damage_modifier,
                                     attack_modifier,
+                                    crit_effect_override,
                                     &actual_result,
                                     10_000,
                                 );

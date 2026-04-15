@@ -2,7 +2,7 @@ use rayon::prelude::*;
 
 use crate::combat::engine::resolve_combat;
 use crate::combat::types::CombatResult;
-use crate::data::models::{Unit, Weapon};
+use crate::data::models::{CritEffect, Unit, Weapon};
 
 #[derive(Debug, Clone)]
 pub struct Percentiles {
@@ -41,7 +41,7 @@ pub struct SimulationResult {
 
 /// Run `n_runs` Monte Carlo simulations and compute statistics.
 /// All modifiers (hit_modifier, wound_modifier, rend_modifier, damage_modifier,
-/// attack_modifier) affect each simulation run the same way as in resolve_combat().
+/// attack_modifier, crit_effect_override) affect each simulation run the same way as in resolve_combat().
 #[allow(clippy::too_many_arguments)]
 pub fn run_simulation(
     attacker: &Unit,
@@ -57,6 +57,7 @@ pub fn run_simulation(
     rend_modifier: i8,
     damage_modifier: i8,
     attack_modifier: i8,
+    crit_effect_override: Option<CritEffect>,
     actual_result: &CombatResult,
     n_runs: usize,
 ) -> SimulationResult {
@@ -79,6 +80,7 @@ pub fn run_simulation(
                 rend_modifier,
                 damage_modifier,
                 attack_modifier,
+                crit_effect_override.clone(),
                 None,
             );
             (
