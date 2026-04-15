@@ -1,186 +1,1396 @@
 {
   "units": [
     {
-      "id": "stormcast_lord_arcanum",
-      "name": "Lord-Arcanum on Gryph-Charger",
-      "faction": "Stormcast Eternals",
+      "id": "aether_khemist",
+      "name": "Aether-Khemist",
+      "faction": "Kharadron Overlords",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "aetheric_navigator",
+      "name": "Aetheric Navigator",
+      "faction": "Kharadron Overlords",
       "save": 3,
       "ward": null,
-      "weapons": [
-        {
-          "name": "Staff of the Arcane",
-          "range": "2\"",
-          "attack": "4",
-          "to_hit": 3,
-          "to_wound": 3,
-          "rend": -2,
-          "damage": "D6",
-          "crit_hit": null
-        }
-      ]
+      "weapons": []
     },
     {
-      "id": "stormcast_judicator",
-      "name": "Judicator",
-      "faction": "Stormcast Eternals",
+      "id": "arkanaut_admiral",
+      "name": "Arkanaut Admiral",
+      "faction": "Kharadron Overlords",
       "save": 3,
       "ward": null,
-      "weapons": [
-        {
-          "name": "Skybolt Bow",
-          "range": "24\"",
-          "attack": "2",
-          "to_hit": 3,
-          "to_wound": 3,
-          "rend": -1,
-          "damage": "1",
-          "crit_hit": null
-        },
-        {
-          "name": "Boltstorm Crossbow",
-          "range": "18\"",
-          "attack": "3",
-          "to_hit": 3,
-          "to_wound": 3,
-          "rend": -1,
-          "damage": "1",
-          "crit_hit": null
-        }
-      ]
+      "weapons": []
     },
     {
-      "id": "orruk_megaboss",
-      "name": "Orruk Megaboss",
-      "faction": "Orruk Warclans",
+      "id": "brokk_grungsson_lord_magnate_of_barak_nar",
+      "name": "Brokk Grungsson, Lord-Magnate of Barak-Nar",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "codewright",
+      "name": "Codewright",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "drekki_flynt",
+      "name": "Drekki Flynt",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "endrinmaster_with_dirigible_suit",
+      "name": "Endrinmaster with Dirigible Suit",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "endrinmaster_with_endrinharness",
+      "name": "Endrinmaster with Endrinharness",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "null_khemist",
+      "name": "Null-Khemist",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "grombrindal_the_white_dwarf_legendary",
+      "name": "Grombrindal, The White Dwarf (Legendary)",
+      "faction": "Kharadron Overlords",
+      "save": 4,
+      "ward": 3,
+      "weapons": []
+    },
+    {
+      "id": "arkanaut_company",
+      "name": "Arkanaut Company",
+      "faction": "Kharadron Overlords",
       "save": 4,
       "ward": null,
-      "weapons": [
-        {
-          "name": "Boss's Ironjaw",
-          "range": null,
-          "attack": "D6",
-          "to_hit": 4,
-          "to_wound": 3,
-          "rend": -1,
-          "damage": "2",
-          "crit_hit": null
-        },
-        {
-          "name": "Gore-choppa",
-          "range": null,
-          "attack": "4",
-          "to_hit": 3,
-          "to_wound": 3,
-          "rend": -1,
-          "damage": "2",
-          "crit_hit": { "type": "auto_wound" }
-        }
-      ]
+      "weapons": []
     },
     {
-      "id": "orruk_brutes",
-      "name": "Orruk Brutes",
-      "faction": "Orruk Warclans",
+      "id": "endrinriggers",
+      "name": "Endrinriggers",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "grundstok_thunderers",
+      "name": "Grundstok Thunderers",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "skywardens",
+      "name": "Skywardens",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "vongrim_harpoon_crew",
+      "name": "Vongrim Harpoon Crew",
+      "faction": "Kharadron Overlords",
       "save": 4,
       "ward": null,
-      "weapons": [
-        {
-          "name": "Jagged Gore-hacka",
-          "range": null,
-          "attack": "2",
-          "to_hit": 4,
-          "to_wound": 3,
-          "rend": -1,
-          "damage": "2",
-          "crit_hit": null
-        },
-        {
-          "name": "Boss Klaw",
-          "range": null,
-          "attack": "3",
-          "to_hit": 3,
-          "to_wound": 3,
-          "rend": -1,
-          "damage": "2",
-          "crit_hit": { "type": "extra_hit" }
-        }
-      ]
+      "weapons": []
     },
     {
-      "id": "soulblight_vampire_lord",
-      "name": "Vampire Lord",
-      "faction": "Soulblight Gravelords",
+      "id": "vongrim_salvagers",
+      "name": "Vongrim Salvagers",
+      "faction": "Kharadron Overlords",
       "save": 4,
-      "ward": 5,
-      "weapons": [
-        {
-          "name": "Soulbound Blade",
-          "range": null,
-          "attack": "5",
-          "to_hit": 3,
-          "to_wound": 3,
-          "rend": -1,
-          "damage": "D3",
-          "crit_hit": null
-        }
-      ]
+      "ward": null,
+      "weapons": []
     },
     {
-      "id": "soulblight_zombies",
-      "name": "Deadwalker Zombies",
-      "faction": "Soulblight Gravelords",
+      "id": "arkanaut_frigate",
+      "name": "Arkanaut Frigate",
+      "faction": "Kharadron Overlords",
+      "save": 2,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "arkanaut_ironclad",
+      "name": "Arkanaut Ironclad",
+      "faction": "Kharadron Overlords",
+      "save": 2,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "grundstok_gunhauler",
+      "name": "Grundstok Gunhauler",
+      "faction": "Kharadron Overlords",
+      "save": 2,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "auto_endrin",
+      "name": "Auto-Endrin",
+      "faction": "Kharadron Overlords",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "thundrik_s_profiteers",
+      "name": "Thundrik's Profiteers",
+      "faction": "Kharadron Overlords",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "scourge_of_ghyran_codewright_legendary",
+      "name": "Scourge of Ghyran Codewright (Legendary)",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "scourge_of_ghyran_grundstok_gunhauler_legendary",
+      "name": "Scourge of Ghyran Grundstok Gunhauler (Legendary)",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "zontari_endrin_dock",
+      "name": "Zontari Endrin Dock",
+      "faction": "Kharadron Overlords",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "killaboss_on_great_gnashtoof",
+      "name": "Killaboss on Great Gnashtoof",
+      "faction": "Kruleboyz",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "hobgrot_slittaboss",
+      "name": "Hobgrot Slittaboss",
+      "faction": "Kruleboyz",
       "save": 6,
       "ward": null,
-      "weapons": [
-        {
-          "name": "Crude Weapons",
-          "range": null,
-          "attack": "D6",
-          "to_hit": 5,
-          "to_wound": 5,
-          "rend": 0,
-          "damage": "1",
-          "crit_hit": null
-        }
-      ]
+      "weapons": []
     },
     {
-      "id": "tzeentch_herald",
-      "name": "Herald of Tzeentch",
-      "faction": "Disciples of Tzeentch",
-      "save": 5,
+      "id": "killaboss_with_stab_grot",
+      "name": "Killaboss with Stab-grot",
+      "faction": "Kruleboyz",
+      "save": 4,
       "ward": null,
-      "weapons": [
-        {
-          "name": "Staff of Change",
-          "range": "18\"",
-          "attack": "3",
-          "to_hit": 4,
-          "to_wound": 3,
-          "rend": -1,
-          "damage": "D3",
-          "crit_hit": { "type": "mortal_wounds", "value": "D3" }
-        }
-      ]
+      "weapons": []
     },
     {
-      "id": "tzeentch_horrors",
-      "name": "Pink Horrors",
-      "faction": "Disciples of Tzeentch",
+      "id": "murknob_with_belcha_banna",
+      "name": "Murknob with Belcha-banna",
+      "faction": "Kruleboyz",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "swampcalla_shaman_with_pot_grot",
+      "name": "Swampcalla Shaman with Pot-grot",
+      "faction": "Kruleboyz",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "breaka_boss_on_mirebrute_troggoth",
+      "name": "Breaka-boss on Mirebrute Troggoth",
+      "faction": "Kruleboyz",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "gobsprakk_the_mouth_of_mork",
+      "name": "Gobsprakk, the Mouth of Mork",
+      "faction": "Kruleboyz",
+      "save": 5,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "killaboss_on_corpse_rippa_vulcha",
+      "name": "Killaboss on Corpse-rippa Vulcha",
+      "faction": "Kruleboyz",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "kragnos_the_end_of_empires",
+      "name": "Kragnos, the End of Empires",
+      "faction": "Kruleboyz",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "snatchaboss_on_sludgeraker_beast",
+      "name": "Snatchaboss on Sludgeraker Beast",
+      "faction": "Kruleboyz",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "swampboss_skumdrekk",
+      "name": "Swampboss Skumdrekk",
+      "faction": "Kruleboyz",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "gutrippaz",
+      "name": "Gutrippaz",
+      "faction": "Kruleboyz",
       "save": 5,
       "ward": null,
-      "weapons": [
-        {
-          "name": "Coruscating Flames",
-          "range": "18\"",
-          "attack": "D6",
-          "to_hit": 4,
-          "to_wound": 4,
-          "rend": 0,
-          "damage": "1",
-          "crit_hit": null
-        }
-      ]
+      "weapons": []
+    },
+    {
+      "id": "hobgrot_slittaz",
+      "name": "Hobgrot Slittaz",
+      "faction": "Kruleboyz",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "man_skewer_boltboyz",
+      "name": "Man-skewer Boltboyz",
+      "faction": "Kruleboyz",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "monsta_killaz",
+      "name": "Monsta-killaz",
+      "faction": "Kruleboyz",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "beast_skewer_killbow",
+      "name": "Beast-skewer Killbow",
+      "faction": "Kruleboyz",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "marshcrawla_sloggoth",
+      "name": "Marshcrawla Sloggoth",
+      "faction": "Kruleboyz",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "knight_of_shrouds_on_ethereal_steed",
+      "name": "Knight of Shrouds on Ethereal Steed",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "reikenor_the_grimhailer",
+      "name": "Reikenor the Grimhailer",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "guardian_of_souls",
+      "name": "Guardian of Souls",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "knight_of_shrouds",
+      "name": "Knight of Shrouds",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "krulghast_cruciator",
+      "name": "Krulghast Cruciator",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "lady_olynder_mortarch_of_grief",
+      "name": "Lady Olynder, Mortarch of Grief",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "lord_executioner",
+      "name": "Lord Executioner",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "lord_vitriolic",
+      "name": "Lord Vitriolic",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "scriptor_mortis",
+      "name": "Scriptor Mortis",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "spirit_torment",
+      "name": "Spirit Torment",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "cairn_wraith",
+      "name": "Cairn Wraith",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "tomb_banshee",
+      "name": "Tomb Banshee",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "kurdoss_valentian_the_craven_king",
+      "name": "Kurdoss Valentian, the Craven King",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "nagash_supreme_lord_of_the_undead",
+      "name": "Nagash, Supreme Lord of the Undead",
+      "faction": "Nighthaunt",
+      "save": 3,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "awlrach_the_drowner",
+      "name": "Awlrach the Drowner",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "dreadblade_harrows",
+      "name": "Dreadblade Harrows",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "hexwraiths",
+      "name": "Hexwraiths",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "bladegheist_revenants",
+      "name": "Bladegheist Revenants",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "chainghasts",
+      "name": "Chainghasts",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "chainrasps",
+      "name": "Chainrasps",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "craventhrone_guard",
+      "name": "Craventhrone Guard",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "dreadscythe_harridans",
+      "name": "Dreadscythe Harridans",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "grimghast_reapers",
+      "name": "Grimghast Reapers",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "myrmourn_banshees",
+      "name": "Myrmourn Banshees",
+      "faction": "Nighthaunt",
+      "save": 6,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "spirit_hosts",
+      "name": "Spirit Hosts",
+      "faction": "Nighthaunt",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "black_coach",
+      "name": "Black Coach",
+      "faction": "Nighthaunt",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "clawlord_on_gnaw_beast",
+      "name": "Clawlord on Gnaw-beast",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "clawlord",
+      "name": "Clawlord",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "arch_warlock",
+      "name": "Arch-Warlock",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "deathmaster",
+      "name": "Deathmaster",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "grey_seer",
+      "name": "Grey Seer",
+      "faction": "Skaven",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "krittok_foulblade",
+      "name": "Krittok Foulblade",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "master_moulder",
+      "name": "Master Moulder",
+      "faction": "Skaven",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warlock_bombardier",
+      "name": "Warlock Bombardier",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warlock_engineer",
+      "name": "Warlock Engineer",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warlock_galvaneer",
+      "name": "Warlock Galvaneer",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "plague_priest",
+      "name": "Plague Priest",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "skreech_verminking",
+      "name": "Skreech Verminking",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "thanquol_on_boneripper",
+      "name": "Thanquol on Boneripper",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "verminlord_corruptor",
+      "name": "Verminlord Corruptor",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "verminlord_deceiver",
+      "name": "Verminlord Deceiver",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "verminlord_warbringer",
+      "name": "Verminlord Warbringer",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "verminlord_warpseer",
+      "name": "Verminlord Warpseer",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "vizzik_skour",
+      "name": "Vizzik Skour",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "grey_seer_on_screaming_bell",
+      "name": "Grey Seer on Screaming Bell",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "plague_furnace",
+      "name": "Plague Furnace",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "clanrats",
+      "name": "Clanrats",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "stormvermin",
+      "name": "Stormvermin",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "plague_monks",
+      "name": "Plague Monks",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "rat_ogors",
+      "name": "Rat Ogors",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warplock_jezzails",
+      "name": "Warplock Jezzails",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "stormfiends",
+      "name": "Stormfiends",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warpvolt_scourgers",
+      "name": "Warpvolt Scourgers",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "doomwheel",
+      "name": "Doomwheel",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "plague_censor_bearers",
+      "name": "Plague Censor Bearers",
+      "faction": "Skaven",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "doom_fire_warlocks",
+      "name": "Doom-Fire Warlocks",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "acolyte_globadiers",
+      "name": "Acolyte Globadiers",
+      "faction": "Skaven",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "night_runners",
+      "name": "Night Runners",
+      "faction": "Skaven",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "ratling_gun",
+      "name": "Ratling Gun",
+      "faction": "Skaven",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warpfire_throwers",
+      "name": "Warpfire Throwers",
+      "faction": "Skaven",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "brood_terror",
+      "name": "Brood Terror",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "hell_pit_abomination",
+      "name": "Hell Pit Abomination",
+      "faction": "Skaven",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "doom_flayers",
+      "name": "Doom-Flayers",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "plagueclaw",
+      "name": "Plagueclaw",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "ratling_warpblaster",
+      "name": "Ratling Warpblaster",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warp_lightning_cannon",
+      "name": "Warp Lightning Cannon",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warp_grinder",
+      "name": "Warp-Grinder",
+      "faction": "Skaven",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "centaurion_marshal",
+      "name": "Centaurion Marshal",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "chaos_lord_on_daemonic_mount",
+      "name": "Chaos Lord on Daemonic Mount",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "chaos_lord_on_karkadrak",
+      "name": "Chaos Lord on Karkadrak",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "darkoath_chieftain_on_warsteed",
+      "name": "Darkoath Chieftain on Warsteed",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "eternus_blade_of_the_first_prince",
+      "name": "Eternus, Blade of the First Prince",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "gaunt_summoner_on_disc_of_tzeentch",
+      "name": "Gaunt Summoner on Disc of Tzeentch",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "singri_brand",
+      "name": "Singri Brand",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "chaos_lord",
+      "name": "Chaos Lord",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "chaos_sorcerer_lord",
+      "name": "Chaos Sorcerer Lord",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "daemon_prince",
+      "name": "Daemon Prince",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "darkoath_chieftain",
+      "name": "Darkoath Chieftain",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "darkoath_warqueen",
+      "name": "Darkoath Warqueen",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "exalted_hero_of_chaos",
+      "name": "Exalted Hero of Chaos",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "gaunt_summoner",
+      "name": "Gaunt Summoner",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "gunnar_brand",
+      "name": "Gunnar Brand",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "ogroid_myrmidon",
+      "name": "Ogroid Myrmidon",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "abraxia_spear_of_the_everchosen",
+      "name": "Abraxia, Spear of the Everchosen",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "archaon_the_everchosen",
+      "name": "Archaon, the Everchosen",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "be_lakor_the_dark_master",
+      "name": "Be'lakor, the Dark Master",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "chaos_spawn",
+      "name": "Chaos Spawn",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "darkoath_wilderfiend",
+      "name": "Darkoath Wilderfiend",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "raptoryx",
+      "name": "Raptoryx",
+      "faction": "Slaves to Darkness",
+      "save": 6,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "fiends",
+      "name": "Fiends",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "chaos_knights",
+      "name": "Chaos Knights",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "darkoath_fellriders",
+      "name": "Darkoath Fellriders",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "varanguard",
+      "name": "Varanguard",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "bloodcrushers",
+      "name": "Bloodcrushers",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "chaos_chosen",
+      "name": "Chaos Chosen",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "chaos_furies",
+      "name": "Chaos Furies",
+      "faction": "Slaves to Darkness",
+      "save": 6,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "chaos_legionnaires",
+      "name": "Chaos Legionnaires",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "chaos_warriors",
+      "name": "Chaos Warriors",
+      "faction": "Slaves to Darkness",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "darkoath_marauders",
+      "name": "Darkoath Marauders",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "darkoath_savagers",
+      "name": "Darkoath Savagers",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "ogroid_theridons",
+      "name": "Ogroid Theridons",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "the_oathsworn_kin",
+      "name": "The Oathsworn Kin",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "bloodletters",
+      "name": "Bloodletters",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "fomoroid_crusher",
+      "name": "Fomoroid Crusher",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "mindstealer_sphiranx",
+      "name": "Mindstealer Sphiranx",
+      "faction": "Slaves to Darkness",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "mutalith_vortex_beast",
+      "name": "Mutalith Vortex Beast",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "slaughterbrute",
+      "name": "Slaughterbrute",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "chaos_chariot",
+      "name": "Chaos Chariot",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "gorebeast_chariot",
+      "name": "Gorebeast Chariot",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "hellflayer",
+      "name": "Hellflayer",
+      "faction": "Slaves to Darkness",
+      "save": 4,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "kelthannor_the_forest_prince",
+      "name": "Kelthannor, the Forest Prince",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "arch_revenant",
+      "name": "Arch-Revenant",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "branchwych",
+      "name": "Branchwych",
+      "faction": "Sylvaneth",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "grove_guardian",
+      "name": "Grove Guardian",
+      "faction": "Sylvaneth",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "warsong_revenant",
+      "name": "Warsong Revenant",
+      "faction": "Sylvaneth",
+      "save": 5,
+      "ward": 6,
+      "weapons": []
+    },
+    {
+      "id": "alarielle_the_everqueen",
+      "name": "Alarielle the Everqueen",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "belthanos_first_thorn_of_kurnoth",
+      "name": "Belthanos, First Thorn of Kurnoth",
+      "faction": "Sylvaneth",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "drycha_hamadreth",
+      "name": "Drycha Hamadreth",
+      "faction": "Sylvaneth",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "spirit_of_durthu",
+      "name": "Spirit of Durthu",
+      "faction": "Sylvaneth",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "the_lady_of_vines",
+      "name": "The Lady of Vines",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": 5,
+      "weapons": []
+    },
+    {
+      "id": "treelord_ancient",
+      "name": "Treelord Ancient",
+      "faction": "Sylvaneth",
+      "save": 3,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "revenant_seekers",
+      "name": "Revenant Seekers",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "spiterider_lancers",
+      "name": "Spiterider Lancers",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "scourge_of_ghyran_revenant_seekers",
+      "name": "Scourge of Ghyran Revenant Seekers",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "dryads",
+      "name": "Dryads",
+      "faction": "Sylvaneth",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "gossamid_archers",
+      "name": "Gossamid Archers",
+      "faction": "Sylvaneth",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "kurnoth_hunters_with_greatbows",
+      "name": "Kurnoth Hunters with Greatbows",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "kurnoth_hunters_with_greatscythes",
+      "name": "Kurnoth Hunters with Greatscythes",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "kurnoth_hunters_with_greatswords",
+      "name": "Kurnoth Hunters with Greatswords",
+      "faction": "Sylvaneth",
+      "save": 4,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "spite_revenants",
+      "name": "Spite-Revenants",
+      "faction": "Sylvaneth",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "the_twistweald",
+      "name": "The Twistweald",
+      "faction": "Sylvaneth",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "tree_revenants",
+      "name": "Tree-Revenants",
+      "faction": "Sylvaneth",
+      "save": 5,
+      "ward": null,
+      "weapons": []
+    },
+    {
+      "id": "treelord",
+      "name": "Treelord",
+      "faction": "Sylvaneth",
+      "save": 3,
+      "ward": null,
+      "weapons": []
     }
   ]
 }

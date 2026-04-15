@@ -1,3 +1,7 @@
+[workspace]
+members = ["tools/convert"]
+resolver = "2"
+
 [package]
 name = "aos4-combat-roller"
 version = "0.1.0"
