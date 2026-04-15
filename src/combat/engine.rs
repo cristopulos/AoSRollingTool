@@ -27,7 +27,7 @@ fn apply_damage_modifier(damage_str: &str, modifier: i8) -> String {
 /// Calculate the save target number.
 /// If the result is > 6, saves auto-fail.
 pub fn calculate_save_target(defender_save: u8, weapon_rend: i8, rend_modifier: i8) -> u8 {
-    let target = defender_save as i8 - weapon_rend - rend_modifier;
+    let target = defender_save as i8 - weapon_rend + rend_modifier;
     target.max(0) as u8
 }
 
@@ -1160,11 +1160,14 @@ mod tests {
 
     #[test]
     fn rend_modifier_affects_save() {
-        // rend_modifier: +1 on rend: -1 with save: 4+ should produce save target 4+
-        // Formula: defender_save - weapon_rend - rend_modifier
-        // Calculation: 4 - (-1) - 1 = 4
-        let save_target = calculate_save_target(4, -1, 1);
-        assert_eq!(save_target, 4);
+        // rend_modifier: +1 on rend: -1 with save: 4+ should produce save target 6+
+        // Formula: defender_save - weapon_rend + rend_modifier
+        // Calculation: 4 - (-1) + 1 = 6
+        assert_eq!(calculate_save_target(4, -1, 1), 6);
+        // rend_modifier: +2 on rend: -1 with save: 4+ should produce save target 7+ (auto-fail)
+        assert_eq!(calculate_save_target(4, -1, 2), 7);
+        // rend_modifier: -1 on rend: -1 with save: 4+ should produce save target 4+
+        assert_eq!(calculate_save_target(4, -1, -1), 4);
     }
 
     #[test]
