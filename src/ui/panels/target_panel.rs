@@ -50,11 +50,8 @@ impl<'a> TargetPanel<'a> {
                         .hscroll(false)
                         .show(ui, |ui| {
                             for faction in factions {
-                                let should_open =
-                                    query.is_empty() || faction.to_lowercase().contains(&query);
                                 egui::CollapsingHeader::new(faction.clone())
                                     .default_open(true)
-                                    .open(Some(should_open))
                                     .show(ui, |ui| {
                                         for unit in
                                             filtered_units.iter().filter(|u| u.faction == faction)
