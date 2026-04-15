@@ -1,5 +1,10 @@
 use serde::{Deserialize, Serialize};
 
+/// Critical hit effects triggered on a roll of 6.
+///
+/// `MortalWounds` uses `Option<String>` to represent two cases:
+/// - `Some(v)`: Crit deals mortal wounds with the specified dice expression (e.g., `"D6"`, `"2"`)
+/// - `None`: Crit bypasses wound/save but deals no bonus damage (still counts as a successful hit)
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value")]
 pub enum CritEffect {
@@ -8,7 +13,7 @@ pub enum CritEffect {
     #[serde(rename = "extra_hit")]
     ExtraHit,
     #[serde(rename = "mortal_wounds")]
-    MortalWounds(String),
+    MortalWounds(Option<String>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

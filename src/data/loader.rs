@@ -111,8 +111,94 @@ mod tests {
         let crit_unit = units.iter().find(|u| u.id == "crit_unit").unwrap();
         assert_eq!(
             crit_unit.weapons[0].crit_hit,
-            Some(CritEffect::MortalWounds("D6".into()))
+            Some(CritEffect::MortalWounds(Some("D6".into())))
         );
+    }
+
+    #[test]
+    fn unit_with_mortal_wounds_none_parses() {
+        let json = r#"{
+            "units": [{
+                "id": "none_mw",
+                "name": "None MW",
+                "faction": "Test",
+                "save": 4,
+                "ward": null,
+                "weapons": [{
+                    "name": "W",
+                    "attack": "1",
+                    "to_hit": 4,
+                    "to_wound": 4,
+                    "rend": 0,
+                    "damage": "1",
+                    "crit_hit": {"type": "mortal_wounds", "value": null}
+                }]
+            }]
+        }"#;
+        let units = load_units_from_str(json).unwrap();
+        assert_eq!(
+            units[0].weapons[0].crit_hit,
+            Some(CritEffect::MortalWounds(None))
+        );
+    }
+
+    #[test]
+    fn unit_with_mortal_wounds_empty_string_parses() {
+        // Empty string is a valid value (distinct from null)
+        let json = r#"{
+            "units": [{
+                "id": "empty_mw",
+                "name": "Empty MW",
+                "faction": "Test",
+                "save": 4,
+                "ward": null,
+                "weapons": [{
+                    "name": "W",
+                    "attack": "1",
+                    "to_hit": 4,
+                    "to_wound": 4,
+                    "rend": 0,
+                    "damage": "1",
+                    "crit_hit": {"type": "mortal_wounds", "value": ""}
+                }]
+            }]
+        }"#;
+        let units = load_units_from_str(json).unwrap();
+        // Empty string should parse as Some("")
+        assert_eq!(
+            units[0].weapons[0].crit_hit,
+            Some(CritEffect::MortalWounds(Some("".into())))
+        );
+    }
+
+    #[test]
+    fn unit_with_all_crit_effect_types_parses() {
+        // Test all three crit effect types in one unit
+        let json = r#"{
+            "units": [{
+                "id": "all_crits",
+                "name": "All Crits",
+                "faction": "Test",
+                "save": 4,
+                "ward": null,
+                "weapons": [
+                    {"name": "AutoWound", "attack": "1", "to_hit": 4, "to_wound": 4, "rend": 0, "damage": "1", "crit_hit": {"type": "auto_wound"}},
+                    {"name": "ExtraHit", "attack": "1", "to_hit": 4, "to_wound": 4, "rend": 0, "damage": "1", "crit_hit": {"type": "extra_hit"}},
+                    {"name": "MWDice", "attack": "1", "to_hit": 4, "to_wound": 4, "rend": 0, "damage": "1", "crit_hit": {"type": "mortal_wounds", "value": "D6"}},
+                    {"name": "MWNull", "attack": "1", "to_hit": 4, "to_wound": 4, "rend": 0, "damage": "1", "crit_hit": {"type": "mortal_wounds", "value": null}}
+                ]
+            }]
+        }"#;
+        let units = load_units_from_str(json).unwrap();
+        let weapons = &units[0].weapons;
+        assert_eq!(weapons.len(), 4);
+        assert_eq!(weapons[0].crit_hit, Some(CritEffect::AutoWound));
+        assert_eq!(weapons[1].crit_hit, Some(CritEffect::ExtraHit));
+        assert_eq!(
+            weapons[2].crit_hit,
+            Some(CritEffect::MortalWounds(Some("D6".into())))
+        );
+        assert_eq!(weapons[3].crit_hit, Some(CritEffect::MortalWounds(None)));
     }
 
     #[test]

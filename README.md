@@ -84,7 +84,7 @@ The UI provides four modifier controls (range: -3 to +3):
 
 - **Auto-Wound**: Wound roll auto-succeeds, proceeds to Save
 - **Extra Hit**: Counts as 2 hits (both resolve normally)
-- **Mortal Wounds**: Skip Wound/Save phases, deal damage directly (still subject to Ward)
+- **Mortal Wounds**: Skip Wound/Save phases, deal damage directly (still subject to Ward). The `value` field specifies the dice expression (e.g., `"D6"` or `"2"`). Use `null` for a crit that bypasses wound/save but deals no bonus damage.
 
 ## License
 

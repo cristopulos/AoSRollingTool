@@ -4,10 +4,13 @@ use crate::app::AoSApp;
 use crate::data::models::CritEffect;
 
 fn format_weapon_stats(weapon: &crate::data::models::Weapon) -> String {
+    // Display crit effect type: MW(v) for mortal wounds with value, MW for None, or full name
     let crit_str = match &weapon.crit_hit {
         Some(CritEffect::AutoWound) => "AutoWnd".to_string(),
         Some(CritEffect::ExtraHit) => "ExtraHit".to_string(),
-        Some(CritEffect::MortalWounds(v)) => format!("MW({})", v),
+        // MW(v) shows the dice value, MW shows it's a mortal wound crit with no bonus value
+        Some(CritEffect::MortalWounds(Some(v))) => format!("MW({})", v),
+        Some(CritEffect::MortalWounds(None)) => "MW".to_string(),
         None => "—".to_string(),
     };
     format!(
