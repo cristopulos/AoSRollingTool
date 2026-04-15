@@ -116,12 +116,8 @@ impl<'a> CombatView<'a> {
                 });
 
             ui.separator();
-            HistogramDisplay::new(
-                &sim.histogram_bins,
-                dmg.actual_value,
-                "Damage Distribution",
-            )
-            .show(ui);
+            HistogramDisplay::new(&sim.histogram_bins, dmg.actual_value, "Damage Distribution")
+                .show(ui);
         }
     }
 }

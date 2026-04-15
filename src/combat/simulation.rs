@@ -87,18 +87,9 @@ pub fn run_simulation(
     }
 
     SimulationResult {
-        hits_stats: build_phase_simulation(
-            &hit_samples,
-            actual_result.phases[0].total_output,
-        ),
-        wounds_stats: build_phase_simulation(
-            &wound_samples,
-            actual_result.phases[1].total_output,
-        ),
-        damage_stats: build_phase_simulation(
-            &damage_samples,
-            actual_result.final_damage,
-        ),
+        hits_stats: build_phase_simulation(&hit_samples, actual_result.phases[0].total_output),
+        wounds_stats: build_phase_simulation(&wound_samples, actual_result.phases[1].total_output),
+        damage_stats: build_phase_simulation(&damage_samples, actual_result.final_damage),
         histogram_bins: compute_histogram(&damage_samples),
     }
 }

@@ -24,7 +24,11 @@ impl<'a> PhaseResultCard<'a> {
 
             if let Some(ref variance) = self.phase.variance_step {
                 match variance {
-                    VarianceStep::AttackRoll { per_model, results, total } => {
+                    VarianceStep::AttackRoll {
+                        per_model,
+                        results,
+                        total,
+                    } => {
                         let results_str = results
                             .iter()
                             .map(|r| r.to_string())
@@ -35,7 +39,11 @@ impl<'a> PhaseResultCard<'a> {
                             per_model, results_str, total
                         ));
                     }
-                    VarianceStep::DamageRoll { per_wound, results, total } => {
+                    VarianceStep::DamageRoll {
+                        per_wound,
+                        results,
+                        total,
+                    } => {
                         let results_str = results
                             .iter()
                             .map(|r| r.to_string())

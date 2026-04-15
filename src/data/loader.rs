@@ -20,8 +20,8 @@ pub fn load_units_from_path<P: AsRef<Path>>(path: P) -> Result<Vec<Unit>, io::Er
 
 #[allow(dead_code)]
 pub fn load_units_from_str(content: &str) -> Result<Vec<Unit>, io::Error> {
-    let db: UnitDatabase = serde_json::from_str(content)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    let db: UnitDatabase =
+        serde_json::from_str(content).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     Ok(db.units)
 }
 

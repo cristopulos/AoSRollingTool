@@ -29,10 +29,7 @@ impl<'a> DiceDisplay<'a> {
                     (egui::Color32::RED, format!("{}", roll.value))
                 };
 
-                ui.colored_label(
-                    color,
-                    egui::RichText::new(label).monospace().size(16.0),
-                );
+                ui.colored_label(color, egui::RichText::new(label).monospace().size(16.0));
             }
         };
 

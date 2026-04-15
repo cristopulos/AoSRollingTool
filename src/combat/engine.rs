@@ -155,11 +155,7 @@ pub fn resolve_damage(weapon: &Weapon, unsaved_wounds: usize) -> (usize, Vec<Dic
 }
 
 /// Resolve ward saves.
-pub fn resolve_ward(
-    damage: usize,
-    ward_target: u8,
-    provided_rolls: Option<&[u8]>,
-) -> WardResult {
+pub fn resolve_ward(damage: usize, ward_target: u8, provided_rolls: Option<&[u8]>) -> WardResult {
     let rolls = match provided_rolls {
         Some(r) => r.to_vec(),
         None => roll_d6_batch(damage),
@@ -207,7 +203,7 @@ pub fn resolve_combat(
     attack_override: usize,
     include_ward: bool,
     /* When true, only process Hit and Wound phases. Save, Damage, and Ward phases
-       are marked as pending, and the defender rolls saves externally. */
+    are marked as pending, and the defender rolls saves externally. */
     stop_after_wound: bool,
     provided_rolls: Option<&[u8]>, // For testing only
 ) -> CombatResult {
@@ -332,10 +328,9 @@ pub fn resolve_combat(
             total_output: 0,
             auto_fails: false,
             skipped: true,
-            description: defender.ward.map_or(
-                "Ward (-) - Pending".to_string(),
-                |w| format!("Ward ({}+) - Pending", w)
-            ),
+            description: defender.ward.map_or("Ward (-) - Pending".to_string(), |w| {
+                format!("Ward ({}+) - Pending", w)
+            }),
             variance_step: None,
         };
         return CombatResult {
@@ -386,7 +381,11 @@ pub fn resolve_combat(
             });
             let dice_rolls = results
                 .into_iter()
-                .map(|v| DiceRoll { value: v, success: true, is_crit: false })
+                .map(|v| DiceRoll {
+                    value: v,
+                    success: true,
+                    is_crit: false,
+                })
                 .collect();
             (total, dice_rolls, variance)
         } else {
@@ -597,7 +596,18 @@ mod tests {
         let defender = test_defender(4, None);
         let weapon = test_weapon();
 
-        let result = resolve_combat(&attacker, &defender, &weapon, 1, false, false, 0, false, false, Some(&[4, 5, 6, 3, 2]));
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false,
+            Some(&[4, 5, 6, 3, 2]),
+        );
 
         assert_eq!(result.phases.len(), 4); // No ward
         assert_eq!(result.phases[0].phase, Phase::Hit);
@@ -615,7 +625,18 @@ mod tests {
         let attacker = test_attacker();
         let defender = test_defender(4, Some(5));
 
-        let result = resolve_combat(&attacker, &defender, &weapon, 1, false, false, 0, true, false, Some(&[6]));
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            true,
+            false,
+            Some(&[6]),
+        );
 
         // Mortal wounds should go straight to damage
         assert_eq!(result.mortal_wounds, 2);
@@ -641,7 +662,8 @@ mod tests {
 
         // 5 models × 3 attacks = 15 hit rolls
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, false, false, 0, false, false, None);
+            &attacker, &defender, &weapon, 5, false, false, 0, false, false, None,
+        );
 
         // Should have 15 rolls in hit phase (5 models × 3 attacks)
         assert_eq!(result.phases[0].rolls.len(), 15);
@@ -664,7 +686,8 @@ mod tests {
 
         // 1 model × 4 attacks = 4 hit rolls
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 1, false, false, 0, false, false, None);
+            &attacker, &defender, &weapon, 1, false, false, 0, false, false, None,
+        );
 
         // Should have 4 rolls in hit phase
         assert_eq!(result.phases[0].rolls.len(), 4);
@@ -687,7 +710,8 @@ mod tests {
 
         // With 3 models, attacks = 3 × (2-4) = 6-12 total
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 3, false, false, 0, false, false, None);
+            &attacker, &defender, &weapon, 3, false, false, 0, false, false, None,
+        );
 
         // Hit phase should have between 6 and 12 rolls
         let hit_count = result.phases[0].rolls.len();
@@ -711,7 +735,8 @@ mod tests {
 
         // 5 models × 3 attacks = 15 total
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, false, false, 0, false, false, None);
+            &attacker, &defender, &weapon, 5, false, false, 0, false, false, None,
+        );
 
         // Description should include model count and total attacks
         let desc = &result.phases[0].description;
@@ -736,11 +761,15 @@ mod tests {
         let defender = test_defender(4, None);
 
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 4, false, false, 0, false, false, None);
+            &attacker, &defender, &weapon, 4, false, false, 0, false, false, None,
+        );
 
         assert!(result.phases[0].variance_step.is_some());
-        if let Some(crate::combat::types::VarianceStep::AttackRoll { per_model, results, total }) =
-            &result.phases[0].variance_step
+        if let Some(crate::combat::types::VarianceStep::AttackRoll {
+            per_model,
+            results,
+            total,
+        }) = &result.phases[0].variance_step
         {
             assert_eq!(per_model, "D6");
             assert_eq!(results.len(), 4); // 4 models = 4 rolls
@@ -767,7 +796,8 @@ mod tests {
         let defender = test_defender(4, None);
 
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 4, false, false, 0, false, false, None);
+            &attacker, &defender, &weapon, 4, false, false, 0, false, false, None,
+        );
 
         assert!(result.phases[0].variance_step.is_none());
         assert_eq!(result.phases[0].rolls.len(), 12); // 4 models × 3 attacks
@@ -779,9 +809,9 @@ mod tests {
             name: "Variable Damage Weapon".into(),
             range: None,
             attack: "2".into(), // Fixed 2 attacks per model
-            to_hit: 1,         // Any roll hits
-            to_wound: 1,       // Any roll wounds
-            rend: -10,         // No save possible
+            to_hit: 1,          // Any roll hits
+            to_wound: 1,        // Any roll wounds
+            rend: -10,          // No save possible
             damage: "D3".into(),
             crit_hit: None,
         };
@@ -789,13 +819,26 @@ mod tests {
         let defender = test_defender(4, None);
 
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, false, false, 0, false, false, Some(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]));
+            &attacker,
+            &defender,
+            &weapon,
+            5,
+            false,
+            false,
+            0,
+            false,
+            false,
+            Some(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
+        );
 
         // Should have 10 wounds, all auto-fail save
         let damage_phase = &result.phases[3];
         assert!(damage_phase.variance_step.is_some());
-        if let Some(crate::combat::types::VarianceStep::DamageRoll { per_wound, results, total }) =
-            &damage_phase.variance_step
+        if let Some(crate::combat::types::VarianceStep::DamageRoll {
+            per_wound,
+            results,
+            total,
+        }) = &damage_phase.variance_step
         {
             assert_eq!(per_wound, "D3");
             assert_eq!(results.len(), 10); // 10 wounds = 10 damage rolls
@@ -822,7 +865,17 @@ mod tests {
         let defender = test_defender(4, None);
 
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, false, false, 0, false, false, Some(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]));
+            &attacker,
+            &defender,
+            &weapon,
+            5,
+            false,
+            false,
+            0,
+            false,
+            false,
+            Some(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
+        );
 
         assert!(result.phases[3].variance_step.is_none());
         assert_eq!(result.phases[3].total_output, 20); // 10 wounds × 2 damage
@@ -845,7 +898,17 @@ mod tests {
 
         // 5 models × 3 + 1 champion = 16 attacks
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, true, false, 0, false, false, Some(&[1; 16]));
+            &attacker,
+            &defender,
+            &weapon,
+            5,
+            true,
+            false,
+            0,
+            false,
+            false,
+            Some(&[1; 16]),
+        );
 
         assert_eq!(result.phases[0].rolls.len(), 16);
         let desc = &result.phases[0].description;
@@ -870,7 +933,17 @@ mod tests {
 
         // Override to exactly 25 attacks
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, false, true, 25, false, false, Some(&[1; 25]));
+            &attacker,
+            &defender,
+            &weapon,
+            5,
+            false,
+            true,
+            25,
+            false,
+            false,
+            Some(&[1; 25]),
+        );
 
         assert_eq!(result.phases[0].rolls.len(), 25);
         let desc = &result.phases[0].description;
@@ -895,7 +968,17 @@ mod tests {
 
         // Champion + override = override wins, exactly 20 attacks
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 5, true, true, 20, false, false, Some(&[1; 20]));
+            &attacker,
+            &defender,
+            &weapon,
+            5,
+            true,
+            true,
+            20,
+            false,
+            false,
+            Some(&[1; 20]),
+        );
 
         assert_eq!(result.phases[0].rolls.len(), 20);
         assert!(result.phases[0].description.contains("20 fixed attacks"));
@@ -908,7 +991,17 @@ mod tests {
         let weapon = test_weapon();
 
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 1, false, false, 0, true, true, Some(&[4, 5, 6, 3, 2]));
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            true,
+            true,
+            Some(&[4, 5, 6, 3, 2]),
+        );
 
         assert_eq!(result.phases.len(), 5);
         assert!(!result.phases[0].skipped);
@@ -936,7 +1029,17 @@ mod tests {
         let defender = test_defender(4, None);
 
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 1, false, false, 0, false, true, Some(&[4, 5, 6, 3, 2]));
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,
+            Some(&[4, 5, 6, 3, 2]),
+        );
 
         assert!(result.stopped_after_wound);
         // Rolls: 4,5,6,3 hit (3+); 2 misses = 4 total hits
@@ -954,7 +1057,17 @@ mod tests {
         let defender = test_defender(4, None);
 
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 1, false, false, 0, false, true, Some(&[1, 2, 3, 4, 6]));
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,
+            Some(&[1, 2, 3, 4, 6]),
+        );
 
         assert!(result.stopped_after_wound);
         // Rolls: 1,2 miss; 3,4 = 2 normal hits; 6 = 1 auto-wound = 3 total hits
@@ -971,7 +1084,17 @@ mod tests {
         let defender = test_defender(4, None);
 
         let result = resolve_combat(
-            &attacker, &defender, &weapon, 1, false, false, 0, false, true, Some(&[6]));
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true,
+            Some(&[6]),
+        );
 
         assert!(result.stopped_after_wound);
         // Mortal wounds do not count as hits for wound rolls
