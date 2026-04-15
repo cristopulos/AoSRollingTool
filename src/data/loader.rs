@@ -111,7 +111,7 @@ mod tests {
         let crit_unit = units.iter().find(|u| u.id == "crit_unit").unwrap();
         assert_eq!(
             crit_unit.weapons[0].crit_hit,
-            Some(CritEffect::MortalWounds(Some("D6".into())))
+            Some(CritEffect::MortalWounds)
         );
     }
 
@@ -136,10 +136,7 @@ mod tests {
             }]
         }"#;
         let units = load_units_from_str(json).unwrap();
-        assert_eq!(
-            units[0].weapons[0].crit_hit,
-            Some(CritEffect::MortalWounds(None))
-        );
+        assert_eq!(units[0].weapons[0].crit_hit, Some(CritEffect::MortalWounds));
     }
 
     #[test]
@@ -164,11 +161,7 @@ mod tests {
             }]
         }"#;
         let units = load_units_from_str(json).unwrap();
-        // Empty string should parse as Some("")
-        assert_eq!(
-            units[0].weapons[0].crit_hit,
-            Some(CritEffect::MortalWounds(Some("".into())))
-        );
+        assert_eq!(units[0].weapons[0].crit_hit, Some(CritEffect::MortalWounds));
     }
 
     #[test]
@@ -194,11 +187,8 @@ mod tests {
         assert_eq!(weapons.len(), 4);
         assert_eq!(weapons[0].crit_hit, Some(CritEffect::AutoWound));
         assert_eq!(weapons[1].crit_hit, Some(CritEffect::ExtraHit));
-        assert_eq!(
-            weapons[2].crit_hit,
-            Some(CritEffect::MortalWounds(Some("D6".into())))
-        );
-        assert_eq!(weapons[3].crit_hit, Some(CritEffect::MortalWounds(None)));
+        assert_eq!(weapons[2].crit_hit, Some(CritEffect::MortalWounds));
+        assert_eq!(weapons[3].crit_hit, Some(CritEffect::MortalWounds));
     }
 
     #[test]

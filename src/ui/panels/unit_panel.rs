@@ -11,15 +11,13 @@ fn format_weapon_stats(
         match crit {
             CritEffect::AutoWound => "[Override] AutoWnd".to_string(),
             CritEffect::ExtraHit => "[Override] ExtraHit".to_string(),
-            CritEffect::MortalWounds(Some(v)) => format!("[Override] MW({})", v),
-            CritEffect::MortalWounds(None) => "[Override] MW".to_string(),
+            CritEffect::MortalWounds => "[Override] MW".to_string(),
         }
     } else {
         match &weapon.crit_hit {
             Some(CritEffect::AutoWound) => "AutoWnd".to_string(),
             Some(CritEffect::ExtraHit) => "ExtraHit".to_string(),
-            Some(CritEffect::MortalWounds(Some(v))) => format!("MW({})", v),
-            Some(CritEffect::MortalWounds(None)) => "MW".to_string(),
+            Some(CritEffect::MortalWounds) => "MW".to_string(),
             None => "—".to_string(),
         }
     };
@@ -34,12 +32,7 @@ fn crit_effect_label(crit: &Option<CritEffect>) -> String {
         None => "Default (use weapon)".to_string(),
         Some(CritEffect::AutoWound) => "Auto Wound".to_string(),
         Some(CritEffect::ExtraHit) => "Extra Hit".to_string(),
-        Some(CritEffect::MortalWounds(v)) => {
-            format!(
-                "Mortal Wounds{}",
-                v.as_ref().map(|s| format!(" ({})", s)).unwrap_or_default()
-            )
-        }
+        Some(CritEffect::MortalWounds) => "Mortal Wounds".to_string(),
     }
 }
 
@@ -181,26 +174,6 @@ impl<'a> UnitPanel<'a> {
                     });
                     ui.horizontal(|ui| {
                         ui.label("Crit Effect:");
-                        let selected_weapon = self
-                            .app
-                            .units
-                            .iter()
-                            .find(|u| self.app.selected_attackers.contains(&u.id))
-                            .and_then(|u| {
-                                u.weapons
-                                    .iter()
-                                    .find(|w| w.name == self.app.selected_weapon)
-                            });
-                        // Clone the weapon's MW dice value (if any) for the override option.
-                        // If the weapon has no Mortal Wounds crit, this is None and selecting
-                        // "Mortal Wounds" will apply MW with no bonus damage.
-                        let mw_value = selected_weapon.and_then(|w| {
-                            if let Some(CritEffect::MortalWounds(v)) = &w.crit_hit {
-                                v.clone()
-                            } else {
-                                None
-                            }
-                        });
                         egui::ComboBox::from_id_salt("crit_effect_override")
                             .selected_text(crit_effect_label(&self.app.crit_effect_override))
                             .show_ui(ui, |ui| {
@@ -221,13 +194,8 @@ impl<'a> UnitPanel<'a> {
                                 );
                                 ui.selectable_value(
                                     &mut self.app.crit_effect_override,
-                                    Some(CritEffect::MortalWounds(mw_value.clone())),
+                                    Some(CritEffect::MortalWounds),
                                     "Mortal Wounds",
-                                );
-                                ui.selectable_value(
-                                    &mut self.app.crit_effect_override,
-                                    Some(CritEffect::MortalWounds(None)),
-                                    "Mortal Wounds (no bonus)",
                                 );
                             });
                     });

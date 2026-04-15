@@ -32,8 +32,7 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -160,8 +159,7 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -243,7 +241,7 @@
     },
     {
       "id": "ravenak_s_gnashing_jaws",
-      "name": "Ravenak’s Gnashing Jaws",
+      "name": "Ravenak\u2019s Gnashing Jaws",
       "faction": "Endless Spells",
       "save": 6,
       "ward": 6,
@@ -390,7 +388,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "The Magnate’s Charter",
+          "name": "The Magnate\u2019s Charter",
           "range": "12\"",
           "attack": "6",
           "to_hit": 3,
@@ -400,7 +398,7 @@
           "crit_hit": null
         },
         {
-          "name": "Grungsson’s Boast",
+          "name": "Grungsson\u2019s Boast",
           "range": "18\"",
           "attack": "1",
           "to_hit": 3,
@@ -410,7 +408,7 @@
           "crit_hit": null
         },
         {
-          "name": "Brokk’s Aethermatic Saw",
+          "name": "Brokk\u2019s Aethermatic Saw",
           "range": null,
           "attack": "5",
           "to_hit": 3,
@@ -470,7 +468,7 @@
           "crit_hit": null
         },
         {
-          "name": "Grunnsson’s Axe",
+          "name": "Grunnsson\u2019s Axe",
           "range": null,
           "attack": "4",
           "to_hit": 3,
@@ -817,7 +815,7 @@
           "crit_hit": null
         },
         {
-          "name": "Skywarden’s Skypike",
+          "name": "Skywarden\u2019s Skypike",
           "range": null,
           "attack": "2",
           "to_hit": 3,
@@ -900,7 +898,7 @@
     },
     {
       "id": "thundrik_s_profiteers",
-      "name": "Thundrik’s Profiteers",
+      "name": "Thundrik\u2019s Profiteers",
       "faction": "Kharadron Overlords",
       "save": 4,
       "ward": null,
@@ -934,8 +932,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
@@ -1100,7 +1097,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "The Trickster’s Staff",
+          "name": "The Trickster\u2019s Staff",
           "range": null,
           "attack": "3",
           "to_hit": 3,
@@ -1127,8 +1124,7 @@
           "rend": -2,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1141,7 +1137,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Great Gnashtoof’s Jaws",
+          "name": "Great Gnashtoof\u2019s Jaws",
           "range": null,
           "attack": "5",
           "to_hit": 4,
@@ -1159,8 +1155,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1181,12 +1176,11 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Great Gnashtoof’s Jaws",
+          "name": "Great Gnashtoof\u2019s Jaws",
           "range": null,
           "attack": "5",
           "to_hit": 4,
@@ -1213,8 +1207,7 @@
           "rend": -1,
           "damage": "D3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1227,7 +1220,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Stab-grot’s Shiv",
+          "name": "Stab-grot\u2019s Shiv",
           "range": null,
           "attack": "2",
           "to_hit": 4,
@@ -1235,8 +1228,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
@@ -1248,8 +1240,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1270,8 +1261,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1292,8 +1282,7 @@
           "rend": 0,
           "damage": "D3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1314,12 +1303,11 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Mirebrute’s Clubs",
+          "name": "Mirebrute\u2019s Clubs",
           "range": null,
           "attack": "4",
           "to_hit": 4,
@@ -1338,7 +1326,7 @@
       "ward": 6,
       "weapons": [
         {
-          "name": "Killabeak’s Stinger",
+          "name": "Killabeak\u2019s Stinger",
           "range": null,
           "attack": "1",
           "to_hit": 3,
@@ -1346,8 +1334,7 @@
           "rend": -1,
           "damage": "D6",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
@@ -1359,12 +1346,11 @@
           "rend": 0,
           "damage": "D3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Killabeak’s Talons and Beak",
+          "name": "Killabeak\u2019s Talons and Beak",
           "range": null,
           "attack": "7",
           "to_hit": 4,
@@ -1391,12 +1377,11 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Vulcha’s Stinger",
+          "name": "Vulcha\u2019s Stinger",
           "range": null,
           "attack": "1",
           "to_hit": 3,
@@ -1404,12 +1389,11 @@
           "rend": -1,
           "damage": "D6",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Vulcha’s Talons and Beak",
+          "name": "Vulcha\u2019s Talons and Beak",
           "range": null,
           "attack": "7",
           "to_hit": 4,
@@ -1469,7 +1453,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Sludgeraker’s Bite",
+          "name": "Sludgeraker\u2019s Bite",
           "range": null,
           "attack": "1",
           "to_hit": 3,
@@ -1487,12 +1471,11 @@
           "rend": -1,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Sludgeraker’s Talons",
+          "name": "Sludgeraker\u2019s Talons",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -1511,7 +1494,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Sloppklaw’s Talons",
+          "name": "Sloppklaw\u2019s Talons",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -1529,12 +1512,11 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Sloppklaw’s Bite",
+          "name": "Sloppklaw\u2019s Bite",
           "range": null,
           "attack": "1",
           "to_hit": 4,
@@ -1561,12 +1543,11 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Sloppklaw’s Bite and Talons",
+          "name": "Sloppklaw\u2019s Bite and Talons",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -1574,8 +1555,7 @@
           "rend": -1,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1596,8 +1576,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1671,8 +1650,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1693,15 +1671,14 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
     },
     {
       "id": "da_kunnin_krew",
-      "name": "Da Kunnin’ Krew",
+      "name": "Da Kunnin\u2019 Krew",
       "faction": "Kruleboyz",
       "save": 5,
       "ward": null,
@@ -1715,15 +1692,14 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
     },
     {
       "id": "daggok_s_stab_ladz",
-      "name": "Daggok’s Stab-ladz",
+      "name": "Daggok\u2019s Stab-ladz",
       "faction": "Kruleboyz",
       "save": 5,
       "ward": null,
@@ -1737,8 +1713,7 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1771,8 +1746,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -1785,7 +1759,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Sloggoth’s Claws",
+          "name": "Sloggoth\u2019s Claws",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -1795,7 +1769,7 @@
           "crit_hit": null
         },
         {
-          "name": "Nets and Snatcha‑stikks",
+          "name": "Nets and Snatcha\u2011stikks",
           "range": null,
           "attack": "4",
           "to_hit": 4,
@@ -1857,7 +1831,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "The Trickster’s Staff",
+          "name": "The Trickster\u2019s Staff",
           "range": null,
           "attack": "3",
           "to_hit": 3,
@@ -1888,7 +1862,7 @@
           }
         },
         {
-          "name": "Ethereal Steed’s Ghostly Hooves and Teeth",
+          "name": "Ethereal Steed\u2019s Ghostly Hooves and Teeth",
           "range": null,
           "attack": "3",
           "to_hit": 5,
@@ -1921,7 +1895,7 @@
           }
         },
         {
-          "name": "Kyllaron’s Ghostly Hooves and Teeth",
+          "name": "Kyllaron\u2019s Ghostly Hooves and Teeth",
           "range": null,
           "attack": "3",
           "to_hit": 5,
@@ -2104,7 +2078,7 @@
           }
         },
         {
-          "name": "Culler’s Sickle",
+          "name": "Culler\u2019s Sickle",
           "range": null,
           "attack": "3",
           "to_hit": 4,
@@ -2302,7 +2276,7 @@
           }
         },
         {
-          "name": "Ethereal Steed’s Ghostly Hooves and Teeth",
+          "name": "Ethereal Steed\u2019s Ghostly Hooves and Teeth",
           "range": null,
           "attack": "3",
           "to_hit": 5,
@@ -2323,7 +2297,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "Ethereal Steed’s Ghostly Hooves and Teeth",
+          "name": "Ethereal Steed\u2019s Ghostly Hooves and Teeth",
           "range": null,
           "attack": "2",
           "to_hit": 5,
@@ -2431,7 +2405,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "Soulhunter’s Crossbow",
+          "name": "Soulhunter\u2019s Crossbow",
           "range": "16\"",
           "attack": "2",
           "to_hit": 4,
@@ -2581,7 +2555,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "Hunter’s Glaive",
+          "name": "Hunter\u2019s Glaive",
           "range": null,
           "attack": "2",
           "to_hit": 4,
@@ -2596,7 +2570,7 @@
     },
     {
       "id": "the_headsmen_s_curse",
-      "name": "The Headsmen’s Curse",
+      "name": "The Headsmen\u2019s Curse",
       "faction": "Nighthaunt",
       "save": 5,
       "ward": 5,
@@ -2688,7 +2662,7 @@
           }
         },
         {
-          "name": "Relic Bearers’ Claws and Ethereal Steeds’ Hooves",
+          "name": "Relic Bearers\u2019 Claws and Ethereal Steeds\u2019 Hooves",
           "range": null,
           "attack": "14",
           "to_hit": 4,
@@ -2700,7 +2674,7 @@
           }
         },
         {
-          "name": "Wraith’s Spectral Weapons",
+          "name": "Wraith\u2019s Spectral Weapons",
           "range": null,
           "attack": "5",
           "to_hit": 3,
@@ -2721,7 +2695,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "Wraith’s Spectral Weapons",
+          "name": "Wraith\u2019s Spectral Weapons",
           "range": null,
           "attack": "5",
           "to_hit": 3,
@@ -2733,7 +2707,7 @@
           }
         },
         {
-          "name": "Black Coach’s Iron-shod Wheels",
+          "name": "Black Coach\u2019s Iron-shod Wheels",
           "range": null,
           "attack": "8",
           "to_hit": 4,
@@ -2799,7 +2773,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "The Trickster’s Staff",
+          "name": "The Trickster\u2019s Staff",
           "range": null,
           "attack": "3",
           "to_hit": 3,
@@ -2840,7 +2814,7 @@
           "crit_hit": null
         },
         {
-          "name": "Gnaw-beast’s Chisel Fangs",
+          "name": "Gnaw-beast\u2019s Chisel Fangs",
           "range": null,
           "attack": "4",
           "to_hit": 4,
@@ -2937,8 +2911,7 @@
           "rend": -1,
           "damage": "D3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -2990,8 +2963,7 @@
           "rend": -2,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -3248,8 +3220,7 @@
           "rend": -3,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -3270,8 +3241,7 @@
           "rend": -2,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -3311,8 +3281,7 @@
           "rend": -1,
           "damage": "D6",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
@@ -3347,7 +3316,7 @@
           "crit_hit": null
         },
         {
-          "name": "Rat Ogor’s Tearing Claws",
+          "name": "Rat Ogor\u2019s Tearing Claws",
           "range": null,
           "attack": "5",
           "to_hit": 4,
@@ -3441,7 +3410,7 @@
           "crit_hit": null
         },
         {
-          "name": "Rat Ogor’s Tearing Claws",
+          "name": "Rat Ogor\u2019s Tearing Claws",
           "range": null,
           "attack": "5",
           "to_hit": 4,
@@ -3540,8 +3509,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -3877,8 +3845,7 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -3906,7 +3873,7 @@
     },
     {
       "id": "skabbik_s_plaguepack",
-      "name": "Skabbik’s Plaguepack",
+      "name": "Skabbik\u2019s Plaguepack",
       "faction": "Skaven",
       "save": 6,
       "ward": null,
@@ -3939,7 +3906,7 @@
     },
     {
       "id": "skittershank_s_clawpack",
-      "name": "Skittershank’s Clawpack",
+      "name": "Skittershank\u2019s Clawpack",
       "faction": "Skaven",
       "save": 6,
       "ward": null,
@@ -3975,15 +3942,14 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
     },
     {
       "id": "spiteclaw_s_swarm",
-      "name": "Spiteclaw’s Swarm",
+      "name": "Spiteclaw\u2019s Swarm",
       "faction": "Skaven",
       "save": 5,
       "ward": null,
@@ -4014,7 +3980,7 @@
     },
     {
       "id": "zikkit_s_tunnelpack",
-      "name": "Zikkit’s Tunnelpack",
+      "name": "Zikkit\u2019s Tunnelpack",
       "faction": "Skaven",
       "save": 6,
       "ward": null,
@@ -4089,8 +4055,7 @@
           "rend": -2,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
@@ -4152,8 +4117,7 @@
           "rend": -2,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
@@ -4234,7 +4198,7 @@
           "crit_hit": null
         },
         {
-          "name": "Crew’s Teeth and Knives",
+          "name": "Crew\u2019s Teeth and Knives",
           "range": null,
           "attack": "D6",
           "to_hit": 4,
@@ -4265,7 +4229,7 @@
           }
         },
         {
-          "name": "Thrall-rats’ Claws",
+          "name": "Thrall-rats\u2019 Claws",
           "range": null,
           "attack": "4",
           "to_hit": 4,
@@ -4294,7 +4258,7 @@
           "crit_hit": null
         },
         {
-          "name": "Crew’s Teeth and Knives",
+          "name": "Crew\u2019s Teeth and Knives",
           "range": null,
           "attack": "D6",
           "to_hit": 4,
@@ -4323,7 +4287,7 @@
           "crit_hit": null
         },
         {
-          "name": "Crew’s Teeth and Knives",
+          "name": "Crew\u2019s Teeth and Knives",
           "range": null,
           "attack": "D6",
           "to_hit": 4,
@@ -4398,7 +4362,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "The Trickster’s Staff",
+          "name": "The Trickster\u2019s Staff",
           "range": null,
           "attack": "3",
           "to_hit": 3,
@@ -4436,7 +4400,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Daemonic Mount’s Mighty Hooves",
+          "name": "Daemonic Mount\u2019s Mighty Hooves",
           "range": null,
           "attack": "3",
           "to_hit": 5,
@@ -4473,12 +4437,11 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Karkadrak’s Claws and Horn",
+          "name": "Karkadrak\u2019s Claws and Horn",
           "range": null,
           "attack": "4",
           "to_hit": 4,
@@ -4505,12 +4468,11 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Warsteed’s Hooves",
+          "name": "Warsteed\u2019s Hooves",
           "range": null,
           "attack": "2",
           "to_hit": 5,
@@ -4529,7 +4491,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Drakocephalus’s Fangs",
+          "name": "Drakocephalus\u2019s Fangs",
           "range": null,
           "attack": "3",
           "to_hit": 4,
@@ -4566,12 +4528,11 @@
           "rend": -1,
           "damage": "D3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Disc’s Teeth and Horns",
+          "name": "Disc\u2019s Teeth and Horns",
           "range": null,
           "attack": "2",
           "to_hit": 4,
@@ -4600,7 +4561,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Singri’s Warbow",
+          "name": "Singri\u2019s Warbow",
           "range": "18\"",
           "attack": "2",
           "to_hit": 3,
@@ -4612,7 +4573,7 @@
           }
         },
         {
-          "name": "Warsteed’s Hooves",
+          "name": "Warsteed\u2019s Hooves",
           "range": null,
           "attack": "2",
           "to_hit": 5,
@@ -4649,8 +4610,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -4690,8 +4650,7 @@
           "rend": -1,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -4712,8 +4671,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -4734,8 +4692,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -4775,8 +4732,7 @@
           "rend": -1,
           "damage": "D3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
@@ -4807,8 +4763,7 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -4858,8 +4813,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -4872,7 +4826,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "The Thanatorg’s Claws and Fangs",
+          "name": "The Thanatorg\u2019s Claws and Fangs",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -4901,7 +4855,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "Dorghar’s Heads",
+          "name": "Dorghar\u2019s Heads",
           "range": null,
           "attack": "3",
           "to_hit": 3,
@@ -4911,7 +4865,7 @@
           "crit_hit": null
         },
         {
-          "name": "Dorghar’s Claws and Tails",
+          "name": "Dorghar\u2019s Claws and Tails",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -4934,7 +4888,7 @@
     },
     {
       "id": "be_lakor_the_dark_master",
-      "name": "Be’lakor the Dark Master",
+      "name": "Be\u2019lakor the Dark Master",
       "faction": "Slaves to Darkness",
       "save": 4,
       "ward": 6,
@@ -4971,7 +4925,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "Gorbolga the Accurs’d",
+          "name": "Gorbolga the Accurs\u2019d",
           "range": null,
           "attack": "5",
           "to_hit": 3,
@@ -4981,7 +4935,7 @@
           "crit_hit": null
         },
         {
-          "name": "The Thanatorg’s Claws and Fangs",
+          "name": "The Thanatorg\u2019s Claws and Fangs",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -5008,12 +4962,11 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Manticore’s Claws and Fangs",
+          "name": "Manticore\u2019s Claws and Fangs",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -5032,7 +4985,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Manticore’s Claws and Fangs",
+          "name": "Manticore\u2019s Claws and Fangs",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -5188,7 +5141,7 @@
           "crit_hit": null
         },
         {
-          "name": "Warsteed’s Hooves",
+          "name": "Warsteed\u2019s Hooves",
           "range": null,
           "attack": "2",
           "to_hit": 5,
@@ -5237,7 +5190,7 @@
           "crit_hit": null
         },
         {
-          "name": "Warsteed’s Hooves",
+          "name": "Warsteed\u2019s Hooves",
           "range": null,
           "attack": "2",
           "to_hit": 5,
@@ -5264,12 +5217,11 @@
           "rend": -2,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Steed’s Tearing Fangs",
+          "name": "Steed\u2019s Tearing Fangs",
           "range": null,
           "attack": "3",
           "to_hit": 4,
@@ -5288,7 +5240,7 @@
       "ward": 6,
       "weapons": [
         {
-          "name": "Juggernaut’s Brazen Hooves",
+          "name": "Juggernaut\u2019s Brazen Hooves",
           "range": null,
           "attack": "2",
           "to_hit": 4,
@@ -5306,8 +5258,7 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -5328,8 +5279,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -5428,8 +5378,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -5479,8 +5428,7 @@
           "rend": 0,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -5501,8 +5449,7 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -5595,8 +5542,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -5661,7 +5607,7 @@
     },
     {
       "id": "khagra_s_ravagers",
-      "name": "Khagra’s Ravagers",
+      "name": "Khagra\u2019s Ravagers",
       "faction": "Slaves to Darkness",
       "save": 3,
       "ward": null,
@@ -5744,8 +5690,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -5788,8 +5733,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -5810,8 +5754,7 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6022,8 +5965,7 @@
           "rend": -2,
           "damage": "D6",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6056,7 +5998,7 @@
           "crit_hit": null
         },
         {
-          "name": "Chaos Steeds’ Trampling Hooves",
+          "name": "Chaos Steeds\u2019 Trampling Hooves",
           "range": null,
           "attack": "4",
           "to_hit": 5,
@@ -6115,7 +6057,7 @@
           "crit_hit": null
         },
         {
-          "name": "Gorebeast’s Crushing Fists",
+          "name": "Gorebeast\u2019s Crushing Fists",
           "range": null,
           "attack": "4",
           "to_hit": 4,
@@ -6144,7 +6086,7 @@
           "crit_hit": null
         },
         {
-          "name": "Steeds’ Poisoned Tongues",
+          "name": "Steeds\u2019 Poisoned Tongues",
           "range": null,
           "attack": "4",
           "to_hit": 3,
@@ -6239,7 +6181,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "The Trickster’s Staff",
+          "name": "The Trickster\u2019s Staff",
           "range": null,
           "attack": "3",
           "to_hit": 3,
@@ -6258,7 +6200,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Kurnothi Princeling’s Bow",
+          "name": "Kurnothi Princeling\u2019s Bow",
           "range": "18\"",
           "attack": "3",
           "to_hit": 3,
@@ -6289,7 +6231,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Arch-Revenant’s Glaive",
+          "name": "Arch-Revenant\u2019s Glaive",
           "range": null,
           "attack": "5",
           "to_hit": 3,
@@ -6345,8 +6287,7 @@
           "rend": -1,
           "damage": "D3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6398,7 +6339,7 @@
           "crit_hit": null
         },
         {
-          "name": "Wardroth Beetle’s Antlers",
+          "name": "Wardroth Beetle\u2019s Antlers",
           "range": null,
           "attack": "6",
           "to_hit": 4,
@@ -6427,7 +6368,7 @@
           "crit_hit": null
         },
         {
-          "name": "Carnelian Greatspite’s Mandibles",
+          "name": "Carnelian Greatspite\u2019s Mandibles",
           "range": null,
           "attack": "4",
           "to_hit": 4,
@@ -6466,8 +6407,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6508,8 +6448,7 @@
           "rend": -2,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6522,7 +6461,7 @@
       "ward": 5,
       "weapons": [
         {
-          "name": "Kurnotheal’s Wrath",
+          "name": "Kurnotheal\u2019s Wrath",
           "range": "12\"",
           "attack": "1",
           "to_hit": 2,
@@ -6532,7 +6471,7 @@
           "crit_hit": null
         },
         {
-          "name": "Kurnotheal’s Wrath and Lashing Vines",
+          "name": "Kurnotheal\u2019s Wrath and Lashing Vines",
           "range": null,
           "attack": "6",
           "to_hit": 3,
@@ -6540,8 +6479,7 @@
           "rend": -2,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6582,8 +6520,7 @@
           "rend": -2,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6617,7 +6554,7 @@
       "ward": null,
       "weapons": [
         {
-          "name": "Seeker’s Sickle",
+          "name": "Seeker\u2019s Sickle",
           "range": null,
           "attack": "3",
           "to_hit": 3,
@@ -6625,12 +6562,11 @@
           "rend": -1,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
-          "name": "Dragonspite’s Mandibles",
+          "name": "Dragonspite\u2019s Mandibles",
           "range": null,
           "attack": "3",
           "to_hit": 4,
@@ -6661,7 +6597,7 @@
           }
         },
         {
-          "name": "Dragonspite’s Mandibles",
+          "name": "Dragonspite\u2019s Mandibles",
           "range": null,
           "attack": "3",
           "to_hit": 4,
@@ -6688,8 +6624,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         },
         {
@@ -6706,7 +6641,7 @@
     },
     {
       "id": "kurnoth_s_heralds",
-      "name": "Kurnoth’s Heralds",
+      "name": "Kurnoth\u2019s Heralds",
       "faction": "Sylvaneth",
       "save": 5,
       "ward": null,
@@ -6847,8 +6782,7 @@
           "rend": -1,
           "damage": "2",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6869,8 +6803,7 @@
           "rend": 0,
           "damage": "1",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]
@@ -6893,7 +6826,7 @@
           "crit_hit": null
         },
         {
-          "name": "Warden’s Bow",
+          "name": "Warden\u2019s Bow",
           "range": "18\"",
           "attack": "2",
           "to_hit": 3,
@@ -6935,7 +6868,7 @@
     },
     {
       "id": "skaeth_s_wild_hunt",
-      "name": "Skaeth’s Wild Hunt",
+      "name": "Skaeth\u2019s Wild Hunt",
       "faction": "Sylvaneth",
       "save": 6,
       "ward": null,
@@ -6964,7 +6897,7 @@
     },
     {
       "id": "ylthari_s_guardians",
-      "name": "Ylthari’s Guardians",
+      "name": "Ylthari\u2019s Guardians",
       "faction": "Sylvaneth",
       "save": 5,
       "ward": null,
@@ -7041,8 +6974,7 @@
           "rend": -2,
           "damage": "3",
           "crit_hit": {
-            "type": "mortal_wounds",
-            "value": null
+            "type": "mortal_wounds"
           }
         }
       ]

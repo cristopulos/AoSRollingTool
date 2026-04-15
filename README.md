@@ -80,13 +80,13 @@ The UI provides six modifier controls (range: -3 to +3 for numeric modifiers):
 - **Rend modifier**: Adjusts effective rend (positive = better armor penetration)
 - **Damage modifier**: Adds to damage output (e.g., `"D3" → "D3+2"` or `"2" → "4"`)
 - **Attacks modifier**: Adds to the per-model attack count (e.g., `"D6" → "D6+1"` or `"2" → "4"`). Applied per-model before the total is computed, so with 5 models and modifier +2: `"2"` → 5 × 4 = 20 attacks. Ignored when using attack override.
-- **Crit Effect**: Dropdown override to replace the weapon's built-in critical hit effect. Options are *Default (use weapon)*, *Auto Wound*, *Extra Hit*, *Mortal Wounds*, and *Mortal Wounds (no bonus)*. When *Mortal Wounds* is selected from the override, it borrows the weapon's dice expression if the weapon has a MW crit; otherwise no bonus damage is applied. When an override is active, the weapon stat display shows an `[Override]` prefix.
+- **Crit Effect**: Dropdown override to replace the weapon's built-in critical hit effect. Options are *Default (use weapon)*, *Auto Wound*, *Extra Hit*, and *Mortal Wounds*. When an override is active, the weapon stat display shows an `[Override]` prefix.
 
 ### Critical Hit Effects
 
 - **Auto-Wound**: Wound roll auto-succeeds, proceeds to Save
-- **Extra Hit**: Counts as 2 hits (both resolve normally)
-- **Mortal Wounds**: Skip Wound/Save phases, deal damage directly (still subject to Ward). The `value` field specifies the dice expression (e.g., `"D6"` or `"2"`). Use `null` for a crit that bypasses wound/save but deals no bonus damage.
+- **Extra Hit**: Counts as 2 hits (both resolve through wound/save normally)
+- **Mortal Wounds**: On a 6, bypass wound/save and deal the weapon's `damage` value directly as mortal wounds. The `damage_modifier` is applied to the damage value. Still subject to Ward saves.
 
 ## License
 

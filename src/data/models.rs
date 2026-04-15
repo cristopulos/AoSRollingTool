@@ -1,19 +1,47 @@
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize};
 
 /// Critical hit effects triggered on a roll of 6.
 ///
-/// `MortalWounds` uses `Option<String>` to represent two cases:
-/// - `Some(v)`: Crit deals mortal wounds with the specified dice expression (e.g., `"D6"`, `"2"`)
-/// - `None`: Crit bypasses wound/save but deals no bonus damage (still counts as a successful hit)
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "type", content = "value")]
+/// Variants:
+/// - `AutoWound`: Wound roll auto-succeeds
+/// - `ExtraHit`: Counts as 2 hits (base + extra)
+/// - `MortalWounds`: Deals `weapon.damage` directly as mortal wounds, bypassing wound and save rolls
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "type")]
 pub enum CritEffect {
     #[serde(rename = "auto_wound")]
     AutoWound,
     #[serde(rename = "extra_hit")]
     ExtraHit,
     #[serde(rename = "mortal_wounds")]
-    MortalWounds(Option<String>),
+    MortalWounds,
+}
+
+impl<'de> Deserialize<'de> for CritEffect {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[allow(dead_code)]
+        struct Helper {
+            #[serde(rename = "type")]
+            ty: String,
+            #[serde(default)]
+            value: Option<serde::de::IgnoredAny>,
+        }
+
+        let helper = Helper::deserialize(deserializer)?;
+        match helper.ty.as_str() {
+            "auto_wound" => Ok(CritEffect::AutoWound),
+            "extra_hit" => Ok(CritEffect::ExtraHit),
+            "mortal_wounds" => Ok(CritEffect::MortalWounds),
+            other => Err(de::Error::unknown_variant(
+                other,
+                &["auto_wound", "extra_hit", "mortal_wounds"],
+            )),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
