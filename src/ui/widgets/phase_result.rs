@@ -70,10 +70,15 @@ impl<'a> PhaseResultCard<'a> {
                     self.phase.total_output
                 ));
             } else if self.phase.crit_extra_count > 0 {
-                let normal = self
-                    .phase
-                    .successes
-                    .saturating_sub(self.phase.crit_extra_count);
+                // Wound phase successes already exclude auto-wounds (they bypass the roll),
+                // so we must not subtract crit_extra_count there.
+                let normal = match self.phase.phase {
+                    Phase::Wound => self.phase.successes,
+                    _ => self
+                        .phase
+                        .successes
+                        .saturating_sub(self.phase.crit_extra_count),
+                };
                 ui.horizontal(|ui| {
                     DiceDisplay::new(&self.phase.rolls).show(ui);
                     let label = match self.phase.phase {
