@@ -43,8 +43,8 @@ pub enum VarianceStep {
 }
 
 /// The result of a single combat phase (Hit, Wound, Save, Damage, or Ward).
-/// Contains dice rolls, success/failure counts, and optional annotations
-/// that explain how crit effects contributed to the phase outcome.
+/// Contains dice rolls, success/failure counts, and crit effect contributions.
+/// Crit effects are displayed inline in the UI using the `crit_extra_count` field.
 #[derive(Debug, Clone)]
 pub struct PhaseResult {
     #[allow(dead_code)]
@@ -57,17 +57,15 @@ pub struct PhaseResult {
     pub skipped: bool,
     pub description: String,
     pub variance_step: Option<VarianceStep>,
-    /// Human-readable annotation explaining crit effect contributions to this phase.
-    /// Displayed below the phase in the UI breakdown:
-    /// - Wound phase: "(+N extra hit[s])" for ExtraHit crits
-    /// - Save phase: "(+N auto-wound[s])" for AutoWound crits
-    /// - Damage phase: "(+N MW)" for MortalWounds crits
-    pub annotation: Option<String>,
-    /// Number of extra dice this phase received from crit effects.
-    /// - Wound phase: count of ExtraHit crits (each generates an additional wound roll)
-    /// - Save phase: count of AutoWound crits (each bypassed the wound roll)
-    /// - Damage phase: count of MortalWound crits (each dealt damage directly)
+    /// Deprecated: crit effects are now displayed inline in the UI.
+    /// Kept for backward compatibility; always None in new code.
     #[allow(dead_code)]
+    pub annotation: Option<String>,
+    /// Number of extra successes this phase received from crit effects.
+    /// Used by the UI to render an inline breakdown:
+    /// - Hit phase: count of ExtraHit crits (extra wound rolls generated)
+    /// - Wound phase: count of AutoWound crits (bypassed the wound roll)
+    /// - Damage phase: count of MortalWound crits (damage dealt directly)
     pub crit_extra_count: usize,
 }
 

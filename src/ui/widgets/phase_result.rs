@@ -1,7 +1,7 @@
 use eframe::egui;
 
 use crate::combat::simulation::PhaseSimulation;
-use crate::combat::types::{PhaseResult, VarianceStep};
+use crate::combat::types::{Phase, PhaseResult, VarianceStep};
 use crate::ui::widgets::dice_display::DiceDisplay;
 
 pub struct PhaseResultCard<'a> {
@@ -69,6 +69,42 @@ impl<'a> PhaseResultCard<'a> {
                     self.phase.successes + self.phase.failures,
                     self.phase.total_output
                 ));
+            } else if self.phase.crit_extra_count > 0 {
+                let normal = self
+                    .phase
+                    .successes
+                    .saturating_sub(self.phase.crit_extra_count);
+                ui.horizontal(|ui| {
+                    DiceDisplay::new(&self.phase.rolls).show(ui);
+                    let label = match self.phase.phase {
+                        Phase::Hit => format!(
+                            "→ {} base + {} extra = {} ({} fail)",
+                            normal,
+                            self.phase.crit_extra_count,
+                            self.phase.total_output,
+                            self.phase.failures
+                        ),
+                        Phase::Wound => format!(
+                            "→ {} normal + {} extra = {} ({} fail)",
+                            normal,
+                            self.phase.crit_extra_count,
+                            self.phase.total_output,
+                            self.phase.failures
+                        ),
+                        Phase::Damage => format!(
+                            "→ {} normal + {} MW = {} ({} fail)",
+                            normal,
+                            self.phase.crit_extra_count,
+                            self.phase.total_output,
+                            self.phase.failures
+                        ),
+                        _ => format!(
+                            "→ {} success, {} fail = {}",
+                            self.phase.successes, self.phase.failures, self.phase.total_output
+                        ),
+                    };
+                    ui.label(label);
+                });
             } else {
                 ui.horizontal(|ui| {
                     DiceDisplay::new(&self.phase.rolls).show(ui);
@@ -77,15 +113,6 @@ impl<'a> PhaseResultCard<'a> {
                         self.phase.successes, self.phase.failures, self.phase.total_output
                     ));
                 });
-            }
-
-            if let Some(ref annotation) = self.phase.annotation {
-                ui.label(
-                    egui::RichText::new(annotation)
-                        .weak()
-                        .italics()
-                        .color(egui::Color32::from_rgb(150, 150, 150)),
-                );
             }
 
             if let Some(sim) = self.simulation {

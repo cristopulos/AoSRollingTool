@@ -6,10 +6,10 @@ A Rust-based desktop application with a GUI for visualizing combat sequence roll
 
 - **Full Combat Sequence Visualization**: Hit → Wound → Save → Damage → Ward
 - **Unit & Weapon Profiles**: Pre-loaded with sample units from major factions
-- **Combat Breakdown Display**: Each phase shows dice rolls with color-coded results (green = success, red = fail, gold = crit). Crit effect contributions are annotated inline:
-  - Wound phase: "(+N extra hit[s])" when ExtraHit crits add extra wounds
-  - Save phase: "(+N auto-wound[s])" when AutoWound crits bypass the wound roll
-  - Damage phase: "(+N MW)" when MortalWound crits deal damage directly
+- **Combat Breakdown Display**: Each phase shows dice rolls with color-coded results (green = success, red = fail, gold = crit). Crit effect contributions are displayed inline within their respective phases:
+  - Hit phase: extra hits shown inline (e.g., "11 base + 4 extra = 15")
+  - Wound phase: auto-wounds shown inline (e.g., "5 normal + 2 extra = 7")
+  - Damage phase: mortal wounds shown inline (e.g., "3 normal + 2 MW = 5")
 - **Combat Log**: History of all previous rolls
 - **Critical Hit Support**: Auto-wound, Extra Hit, and Mortal Wounds (with optional override dropdown)
 - **Ward Saves**: Optional ward phase per unit profile
