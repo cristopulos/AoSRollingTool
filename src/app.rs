@@ -179,6 +179,18 @@ impl AoSApp {
 
 impl eframe::App for AoSApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Keyboard zoom controls: = to zoom in, - to zoom out
+        {
+            let zoom_in = ctx.input(|i| i.key_pressed(egui::Key::Equals));
+            let zoom_out = ctx.input(|i| i.key_pressed(egui::Key::Minus));
+            if zoom_in || zoom_out {
+                let current = ctx.input(|i| i.pixels_per_point());
+                let factor = if zoom_in { 1.2 } else { 1.0 / 1.2 };
+                let new_scale = (current * factor).clamp(0.5, 3.0);
+                ctx.set_pixels_per_point(new_scale);
+            }
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Age of Sigmar 4th Edition - Combat Roller");
             ui.separator();
