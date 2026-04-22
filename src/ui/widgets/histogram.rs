@@ -81,7 +81,8 @@ impl<'a> HistogramDisplay<'a> {
                 .legend(Legend::default())
                 .x_axis_label("Damage")
                 .y_axis_label("Probability")
-                .auto_bounds(egui::Vec2b::new(true, false))
+                .auto_bounds(egui::Vec2b::new(true, true))
+                .include_y(0.0)
                 .show(ui, |plot_ui| {
                     plot_ui.bar_chart(chart);
 
