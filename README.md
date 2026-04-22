@@ -10,6 +10,7 @@ A Rust-based desktop application with a GUI for visualizing combat sequence roll
   - Hit phase: extra hits shown inline (e.g., "11 base + 4 extra = 15")
   - Wound phase: auto-wounds shown inline (e.g., "5 normal + 2 extra = 7")
   - Damage phase: mortal wounds shown inline (e.g., "3 normal + 2 MW = 5")
+  - **Large roll sets**: When displaying more than 20 dice, results are grouped (e.g., "4×6 3×5") to maintain readability. Groups are sorted by die value descending with color applied to the group based on the highest-priority result within.
 - **Combat Log**: History of all previous rolls
 - **Critical Hit Support**: Auto-wound, Extra Hit, and Mortal Wounds (with optional override dropdown)
 - **Ward Saves**: Optional ward phase per unit profile
