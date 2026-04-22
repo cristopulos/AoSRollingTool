@@ -42,10 +42,16 @@ impl<'a> HistogramDisplay<'a> {
             return;
         }
 
+        let total: usize = self.bins.iter().map(|b| b.count).sum();
+        if total == 0 {
+            ui.label("No simulation data to display.");
+            return;
+        }
+        let total_f = total as f64;
+
         let bsize = bin_size(self.bins).max(1) as f64;
         let actual_f = self.actual_value as f64;
-        let max_count = self.bins.iter().map(|b| b.count).max().unwrap_or(1) as f64;
-        let label_offset = (max_count * 0.03).max(5.0);
+        let label_offset = 3.0_f64.max(2.0);
         let text_color = ui.visuals().text_color();
 
         let bars: Vec<Bar> = self
@@ -60,7 +66,8 @@ impl<'a> HistogramDisplay<'a> {
                 } else {
                     egui::Color32::from_rgb(100, 150, 255)
                 };
-                Bar::new(center, bin.count as f64)
+                let pct = (bin.count as f64 / total_f) * 100.0;
+                Bar::new(center, pct)
                     .width(bsize)
                     .fill(color)
             })
@@ -71,17 +78,18 @@ impl<'a> HistogramDisplay<'a> {
         Plot::new("damage_histogram")
             .legend(Legend::default())
             .x_axis_label("Damage")
-            .y_axis_label("Simulations")
+            .y_axis_label("Probability")
             .auto_bounds(egui::Vec2b::new(true, false))
             .show(ui, |plot_ui| {
                 plot_ui.bar_chart(chart);
 
-                // Count labels above each bar (read from bins to avoid cloning Bar vec)
+                // Percentage labels above each bar
                 for bin in self.bins {
                     let center = bin.value as f64 + bsize / 2.0;
-                    let label_pos = PlotPoint::new(center, bin.count as f64 + label_offset);
+                    let pct = (bin.count as f64 / total_f) * 100.0;
+                    let label_pos = PlotPoint::new(center, pct + label_offset);
                     plot_ui.text(
-                        Text::new(label_pos, format!("{}", bin.count))
+                        Text::new(label_pos, format!("{:.1}%", pct))
                             .anchor(egui::Align2::CENTER_BOTTOM)
                             .color(text_color),
                     );
