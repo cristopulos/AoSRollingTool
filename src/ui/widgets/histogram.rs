@@ -75,50 +75,53 @@ impl<'a> HistogramDisplay<'a> {
 
         let chart = BarChart::new(bars).name("Simulations");
 
-        Plot::new("damage_histogram")
-            .legend(Legend::default())
-            .x_axis_label("Damage")
-            .y_axis_label("Probability")
-            .auto_bounds(egui::Vec2b::new(true, false))
-            .show(ui, |plot_ui| {
-                plot_ui.bar_chart(chart);
+        let plot_height = 400.0;
+        ui.allocate_ui(egui::vec2(ui.available_width(), plot_height), |ui| {
+            Plot::new("damage_histogram")
+                .legend(Legend::default())
+                .x_axis_label("Damage")
+                .y_axis_label("Probability")
+                .auto_bounds(egui::Vec2b::new(true, false))
+                .show(ui, |plot_ui| {
+                    plot_ui.bar_chart(chart);
 
-                // Percentage labels above each bar
-                for bin in self.bins {
-                    let center = bin.value as f64 + bsize / 2.0;
-                    let pct = (bin.count as f64 / total_f) * 100.0;
-                    let label_pos = PlotPoint::new(center, pct + label_offset);
-                    plot_ui.text(
-                        Text::new(label_pos, format!("{:.1}%", pct))
-                            .anchor(egui::Align2::CENTER_BOTTOM)
-                            .color(text_color),
-                    );
-                }
+                    // Percentage labels above each bar
+                    for bin in self.bins {
+                        let center = bin.value as f64 + bsize / 2.0;
+                        let pct = (bin.count as f64 / total_f) * 100.0;
+                        let label_pos = PlotPoint::new(center, pct + label_offset);
+                        plot_ui.text(
+                            Text::new(label_pos, format!("{:.1}%", pct))
+                                .anchor(egui::Align2::CENTER_BOTTOM)
+                                .color(text_color),
+                        );
+                    }
 
-                // Vertical lines
-                plot_ui.vline(
-                    VLine::new(actual_f)
-                        .name("Your roll")
-                        .color(egui::Color32::from_rgb(255, 100, 100))
-                        .width(2.0),
-                );
-                if let Some(p25) = self.p25 {
+                    // Vertical lines
                     plot_ui.vline(
-                        VLine::new(p25 as f64)
-                            .name("25th percentile")
-                            .color(egui::Color32::from_rgb(255, 160, 0))
+                        VLine::new(actual_f)
+                            .name("Your roll")
+                            .color(egui::Color32::from_rgb(255, 100, 100))
                             .width(2.0),
                     );
-                }
-                if let Some(p75) = self.p75 {
-                    plot_ui.vline(
-                        VLine::new(p75 as f64)
-                            .name("75th percentile")
-                            .color(egui::Color32::from_rgb(80, 220, 220))
-                            .width(2.0),
-                    );
-                }
-            });
+                    if let Some(p25) = self.p25 {
+                        plot_ui.vline(
+                            VLine::new(p25 as f64)
+                                .name("25th percentile")
+                                .color(egui::Color32::from_rgb(255, 160, 0))
+                                .width(2.0),
+                        );
+                    }
+                    if let Some(p75) = self.p75 {
+                        plot_ui.vline(
+                            VLine::new(p75 as f64)
+                                .name("75th percentile")
+                                .color(egui::Color32::from_rgb(80, 220, 220))
+                                .width(2.0),
+                        );
+                    }
+                });
+        });
 
         ui.horizontal(|ui| {
             ui.colored_label(
