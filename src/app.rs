@@ -388,14 +388,18 @@ impl eframe::App for AoSApp {
 
                     ui.separator();
 
-                    if let Some(result) = &self.current_result {
-                        CombatView::new(result, self.simulation_result.as_ref()).show(ui);
-                    } else {
-                        ui.label("Select units and weapon, then click ROLL COMBAT");
-                    }
+                    egui::ScrollArea::vertical()
+                        .id_salt("results_scroll")
+                        .show(ui, |ui| {
+                            if let Some(result) = &self.current_result {
+                                CombatView::new(result, self.simulation_result.as_ref()).show(ui);
+                            } else {
+                                ui.label("Select units and weapon, then click ROLL COMBAT");
+                            }
 
-                    ui.separator();
-                    LogPanel::new(&self.combat_log).show(ui);
+                            ui.separator();
+                            LogPanel::new(&self.combat_log).show(ui);
+                        });
                 });
             });
         });
