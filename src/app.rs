@@ -9,6 +9,7 @@ use crate::data::loader::load_units_from_path;
 use crate::data::models::{CritEffect, Unit};
 use crate::ui::panels::combat_view::CombatView;
 use crate::ui::panels::log_panel::LogPanel;
+use crate::ui::panels::recent_panel::RecentPanel;
 use crate::ui::panels::target_panel::TargetPanel;
 use crate::ui::panels::unit_panel::UnitPanel;
 
@@ -46,6 +47,12 @@ pub struct AoSApp {
     pub simulation_result: Option<SimulationResult>,
     pub simulation_rx: Option<Receiver<SimulationResult>>,
     pub is_simulating: bool,
+    /// Recently used attacker units (unit_id, unit_name) from the current session.
+    /// Updated after each combat roll. Most recent first. No entry limit.
+    pub recent_attackers: Vec<(String, String)>,
+    /// Recently used defender units (unit_id, unit_name) from the current session.
+    /// Updated after each combat roll. Most recent first. No entry limit.
+    pub recent_defenders: Vec<(String, String)>,
 }
 
 impl AoSApp {
@@ -79,6 +86,8 @@ impl AoSApp {
             simulation_result: None,
             simulation_rx: None,
             is_simulating: false,
+            recent_attackers: Vec::new(),
+            recent_defenders: Vec::new(),
         }
     }
 
@@ -158,6 +167,16 @@ impl AoSApp {
                             self.crit_effect_override.clone(),
                             None,
                         );
+                        // Update recently-used lists before storing result
+                        if let Some(unit) = self.units.iter().find(|u| u.name == attacker.name) {
+                            self.recent_attackers.retain(|(id, _)| id != &unit.id);
+                            self.recent_attackers.insert(0, (unit.id.clone(), unit.name.clone()));
+                        }
+                        if let Some(unit) = self.units.iter().find(|u| u.name == defender.name) {
+                            self.recent_defenders.retain(|(id, _)| id != &unit.id);
+                            self.recent_defenders.insert(0, (unit.id.clone(), unit.name.clone()));
+                        }
+
                         self.combat_log.push(result.clone());
                         self.current_result = Some(result);
                         self.error_message = None;
@@ -246,6 +265,14 @@ impl eframe::App for AoSApp {
                     );
 
                     TargetPanel::new(self).show(ui);
+                });
+
+                ui.separator();
+
+                // Middle panel - recently used units
+                ui.vertical(|ui| {
+                    ui.set_width(200.0);
+                    RecentPanel::new(self).show(ui);
                 });
 
                 ui.separator();
