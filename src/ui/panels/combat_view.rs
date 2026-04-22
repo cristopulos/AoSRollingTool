@@ -88,9 +88,12 @@ impl<'a> CombatView<'a> {
                 });
 
             ui.separator();
-            HistogramDisplay::new(&sim.histogram_bins,
+            HistogramDisplay::new(
+                &sim.histogram_bins,
                 dmg.actual_value,
                 "Damage Distribution",
+                Some(dmg.percentiles.p25),
+                Some(dmg.percentiles.p75),
             )
             .show(ui);
         }

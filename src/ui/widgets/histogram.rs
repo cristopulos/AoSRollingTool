@@ -1,11 +1,11 @@
 //! Histogram visualization widget using `egui_plot::BarChart`.
 //!
-//! Uses `egui_plot`'s `BarChart` for proper axis scaling, grid lines, and zoom support
-//! rather than custom painter primitives. This provides better UX with large datasets
-//! common in Monte Carlo simulations.
+//! Uses `egui_plot`'s `BarChart` for proper axis scaling, grid lines, and zoom support.
+//! Each unique damage value gets its own bar with a count label above it. Vertical
+//! lines mark the actual roll and optional 25th/75th percentile boundaries.
 
 use eframe::egui;
-use egui_plot::{Bar, BarChart, Legend, Plot, VLine};
+use egui_plot::{Bar, BarChart, Legend, Plot, PlotPoint, Text, VLine};
 
 use crate::combat::simulation::HistogramBin;
 
@@ -13,14 +13,24 @@ pub struct HistogramDisplay<'a> {
     bins: &'a [HistogramBin],
     actual_value: usize,
     title: &'a str,
+    p25: Option<usize>,
+    p75: Option<usize>,
 }
 
 impl<'a> HistogramDisplay<'a> {
-    pub fn new(bins: &'a [HistogramBin], actual_value: usize, title: &'a str) -> Self {
+    pub fn new(
+        bins: &'a [HistogramBin],
+        actual_value: usize,
+        title: &'a str,
+        p25: Option<usize>,
+        p75: Option<usize>,
+    ) -> Self {
         Self {
             bins,
             actual_value,
             title,
+            p25,
+            p75,
         }
     }
 
@@ -34,6 +44,9 @@ impl<'a> HistogramDisplay<'a> {
 
         let bsize = bin_size(self.bins).max(1) as f64;
         let actual_f = self.actual_value as f64;
+        let max_count = self.bins.iter().map(|b| b.count).max().unwrap_or(1) as f64;
+        let label_offset = (max_count * 0.03).max(5.0);
+        let text_color = ui.visuals().text_color();
 
         let bars: Vec<Bar> = self
             .bins
@@ -59,14 +72,54 @@ impl<'a> HistogramDisplay<'a> {
             .legend(Legend::default())
             .x_axis_label("Damage")
             .y_axis_label("Simulations")
+            .auto_bounds(egui::Vec2b::new(true, false))
             .show(ui, |plot_ui| {
                 plot_ui.bar_chart(chart);
-                plot_ui.vline(VLine::new(actual_f).name("Your roll"));
+
+                // Count labels above each bar (read from bins to avoid cloning Bar vec)
+                for bin in self.bins {
+                    let center = bin.value as f64 + bsize / 2.0;
+                    let label_pos = PlotPoint::new(center, bin.count as f64 + label_offset);
+                    plot_ui.text(
+                        Text::new(label_pos, format!("{}", bin.count))
+                            .anchor(egui::Align2::CENTER_BOTTOM)
+                            .color(text_color),
+                    );
+                }
+
+                // Vertical lines
+                plot_ui.vline(
+                    VLine::new(actual_f)
+                        .name("Your roll")
+                        .color(egui::Color32::from_rgb(255, 100, 100))
+                        .width(2.0),
+                );
+                if let Some(p25) = self.p25 {
+                    plot_ui.vline(
+                        VLine::new(p25 as f64)
+                            .name("25th percentile")
+                            .color(egui::Color32::from_rgb(255, 160, 0))
+                            .width(2.0),
+                    );
+                }
+                if let Some(p75) = self.p75 {
+                    plot_ui.vline(
+                        VLine::new(p75 as f64)
+                            .name("75th percentile")
+                            .color(egui::Color32::from_rgb(80, 220, 220))
+                            .width(2.0),
+                    );
+                }
             });
 
         ui.horizontal(|ui| {
-            ui.colored_label(egui::Color32::from_rgb(255, 100, 100), "Your roll");
+            ui.colored_label(
+                egui::Color32::from_rgb(255, 100, 100),
+                "Your roll",
+            );
             ui.colored_label(egui::Color32::from_rgb(100, 150, 255), "Expected range");
+            ui.colored_label(egui::Color32::from_rgb(255, 160, 0), "25th percentile");
+            ui.colored_label(egui::Color32::from_rgb(80, 220, 220), "75th percentile");
         });
     }
 }

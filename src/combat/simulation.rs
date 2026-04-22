@@ -167,15 +167,7 @@ fn compute_histogram(samples: &[usize]) -> Vec<HistogramBin> {
     if samples.is_empty() {
         return Vec::new();
     }
-    let max_val = *samples.iter().max().unwrap();
-    let _min_val = *samples.iter().min().unwrap();
-    let bin_size = if max_val > 30 {
-        5
-    } else if max_val > 15 {
-        2
-    } else {
-        1
-    };
+    let bin_size = 1; // One bar per unique damage value for maximum granularity
 
     let mut counts = std::collections::BTreeMap::new();
     for &v in samples {
@@ -214,11 +206,12 @@ mod tests {
     }
 
     #[test]
-    fn histogram_bins_group_when_large() {
+    fn histogram_bins_are_individual_values() {
         let samples: Vec<usize> = (0..50).collect();
         let bins = compute_histogram(&samples);
         assert!(!bins.is_empty());
-        // With max > 30, bin size should be 5
-        assert!(bins.iter().all(|b| b.value % 5 == 0));
+        // With bin_size=1, every value from 0-49 gets its own bin
+        assert_eq!(bins.len(), 50);
+        assert!(bins.iter().all(|b| b.value % 1 == 0));
     }
 }

@@ -15,7 +15,7 @@ A Rust-based desktop application with a GUI for visualizing combat sequence roll
 - **Critical Hit Support**: Auto-wound, Extra Hit, and Mortal Wounds (with optional override dropdown)
 - **Ward Saves**: Optional ward phase per unit profile
 - **Stop After Wound**: Checkbox to stop the combat sequence after Hit and Wound phases, allowing the defender to roll saves externally (useful for in-person games where each player rolls their own dice)
-- **Percentile Analysis**: When Monte Carlo simulation is enabled, displays percentile ranking, mean, and quartile statistics. The damage distribution is visualized with a proper bar chart using `egui_plot` with interactive zoom and grid lines. Your actual roll is highlighted on the chart for comparison against the expected distribution.
+- **Percentile Analysis**: When Monte Carlo simulation is enabled, displays percentile ranking, mean, and quartile statistics. The damage distribution is visualized with a bar chart where each unique damage value gets its own bar (no grouping), with count labels above each bar. The chart includes vertical markers for your actual roll, and 25th/75th percentile lines for quartile reference.
 
 ## Supported Factions
 
