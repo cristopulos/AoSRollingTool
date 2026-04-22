@@ -58,34 +58,26 @@ impl<'a> CombatView<'a> {
                 dmg.percentile * 100.0
             ));
 
-            egui::Grid::new("sim_stats")
-                .num_columns(2)
-                .spacing([20.0, 4.0])
-                .show(ui, |ui| {
-                    ui.label("Mean:");
-                    ui.label(format!("{:.1}", dmg.percentiles.mean));
-                    ui.end_row();
+            ui.horizontal_wrapped(|ui| {
+                let stat = |ui: &mut egui::Ui, label: &str, value: String, strong: bool| {
+                    ui.vertical(|ui| {
+                        ui.set_min_width(70.0);
+                        ui.label(egui::RichText::new(label).size(11.0).weak());
+                        if strong {
+                            ui.strong(egui::RichText::new(value).size(14.0));
+                        } else {
+                            ui.label(egui::RichText::new(value).size(14.0));
+                        }
+                    });
+                };
 
-                    ui.label("10th percentile:");
-                    ui.label(format!("{}", dmg.percentiles.p10));
-                    ui.end_row();
-
-                    ui.label("25th percentile:");
-                    ui.label(format!("{}", dmg.percentiles.p25));
-                    ui.end_row();
-
-                    ui.label("Median (50th):");
-                    ui.strong(format!("{}", dmg.percentiles.p50));
-                    ui.end_row();
-
-                    ui.label("75th percentile:");
-                    ui.label(format!("{}", dmg.percentiles.p75));
-                    ui.end_row();
-
-                    ui.label("90th percentile:");
-                    ui.label(format!("{}", dmg.percentiles.p90));
-                    ui.end_row();
-                });
+                stat(ui, "Mean", format!("{:.1}", dmg.percentiles.mean), false);
+                stat(ui, "10th", format!("{}", dmg.percentiles.p10), false);
+                stat(ui, "25th", format!("{}", dmg.percentiles.p25), false);
+                stat(ui, "Median", format!("{}", dmg.percentiles.p50), true);
+                stat(ui, "75th", format!("{}", dmg.percentiles.p75), false);
+                stat(ui, "90th", format!("{}", dmg.percentiles.p90), false);
+            });
 
             ui.separator();
             HistogramDisplay::new(
