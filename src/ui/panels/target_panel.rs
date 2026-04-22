@@ -13,6 +13,39 @@ impl<'a> TargetPanel<'a> {
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
         ui.heading("Defender");
+
+        ui.checkbox(&mut self.app.use_manual_defender, "Manual Defender");
+        ui.checkbox(&mut self.app.include_ward, "Include Ward Saves");
+        ui.separator();
+
+        if self.app.use_manual_defender {
+            ui.label("Manual Defender Stats");
+
+            ui.horizontal(|ui| {
+                ui.label("Save:");
+                ui.add(
+                    egui::Slider::new(&mut self.app.manual_defender_save, 1..=7).text("+"),
+                );
+            });
+
+            let mut has_ward = self.app.manual_defender_ward.is_some();
+            ui.checkbox(&mut has_ward, "Has Ward Save");
+            if has_ward {
+                if self.app.manual_defender_ward.is_none() {
+                    self.app.manual_defender_ward = Some(6);
+                }
+                ui.horizontal(|ui| {
+                    ui.label("Ward:");
+                    if let Some(ref mut w) = self.app.manual_defender_ward {
+                        ui.add(egui::Slider::new(w, 1..=6).text("+"));
+                    }
+                });
+            } else {
+                self.app.manual_defender_ward = None;
+            }
+            return;
+        }
+
         // Search field filters units by name or faction
         ui.horizontal(|ui| {
             ui.label("Search:");
@@ -69,9 +102,6 @@ impl<'a> TargetPanel<'a> {
                         });
                 },
             );
-
-            ui.separator();
-            ui.checkbox(&mut self.app.include_ward, "Include Ward Saves");
 
             // Show defender stats if selected
             if !self.app.selected_defender.is_empty() {

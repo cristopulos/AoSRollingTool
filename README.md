@@ -14,8 +14,8 @@ A Rust-based desktop application with a GUI for visualizing combat sequence roll
 - **Combat Log**: History of all previous rolls
 - **Critical Hit Support**: Auto-wound, Extra Hit, and Mortal Wounds (with optional override dropdown)
 - **Ward Saves**: Optional ward phase per unit profile
-- **Stop After Wound**: Checkbox to stop the combat sequence after Hit and Wound phases, allowing the defender to roll saves externally (useful for in-person games where each player rolls their own dice)
-- **Percentile Analysis**: When Monte Carlo simulation is enabled, displays percentile ranking, mean, and quartile statistics. The damage distribution is visualized with a bar chart where each unique damage value gets its own bar (no grouping), with count labels above each bar. The chart includes vertical markers for your actual roll, and 25th/75th percentile lines for quartile reference.
+- **Stop After Wound**: Checkbox to stop the combat sequence after Hit and Wound phases, allowing the defender to roll saves externally (useful for in-person games where each player rolls their own dice).
+- **Manual Defender**: When enabled, hides the unit list and lets you input save (1-7, default 4) and optional ward (1-6, default none) directly. A save value of 7 means "no save" (auto-fail). Works with both single rolls and 10,000-run simulations. The "Include Ward Saves" checkbox controls whether the ward phase is actually tested.: When Monte Carlo simulation is enabled, displays percentile ranking, mean, and quartile statistics. The damage distribution is visualized with a bar chart where each unique damage value gets its own bar (no grouping), with count labels above each bar. The chart includes vertical markers for your actual roll, and 25th/75th percentile lines for quartile reference.
 
 ## Supported Factions
 

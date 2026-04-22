@@ -18,6 +18,10 @@ pub struct AoSApp {
     pub selected_attackers: Vec<String>, // Unit IDs
     pub selected_weapon: String,
     pub selected_defender: String,
+    /// When true, use manually entered save/ward values instead of unit list selection.
+    pub use_manual_defender: bool,
+    pub manual_defender_save: u8,       // 1-7, default 4
+    pub manual_defender_ward: Option<u8>, // None = no ward
     pub num_models: usize,         // Number of attacking models
     pub has_champion: bool,        // Adds +1 to total attacks
     pub use_attack_override: bool, // Toggle between models×attack and fixed attacks
@@ -62,6 +66,9 @@ impl AoSApp {
             selected_attackers: Vec::new(),
             selected_weapon: String::new(),
             selected_defender: String::new(),
+            use_manual_defender: false,
+            manual_defender_save: 4,
+            manual_defender_ward: None,
             num_models: 1,
             has_champion: false,
             use_attack_override: false,
@@ -101,12 +108,39 @@ impl AoSApp {
         Vec::new()
     }
 
+    /// Build a synthetic `Unit` from the manually entered save/ward values.
+    ///
+    /// The returned unit has `id: "manual_defender"`, an empty weapons list,
+    /// and name derived from the current save (1-7) and ward (None or 1-6) fields.
+    /// A save value of 7 represents "no save" (auto-fail) and is annotated
+    /// accordingly in the display name.
+    fn manual_defender_unit(&self) -> crate::data::models::Unit {
+        crate::data::models::Unit {
+            id: "manual_defender".into(),
+            name: format!(
+                "Manual (Save {}{}, Ward {})",
+                self.manual_defender_save,
+                if self.manual_defender_save == 7 {
+                    " (no save)"
+                } else {
+                    ""
+                },
+                self.manual_defender_ward
+                    .map_or("None".into(), |w| format!("{}+", w))
+            ),
+            faction: "Manual".into(),
+            save: self.manual_defender_save,
+            ward: self.manual_defender_ward,
+            weapons: vec![],
+        }
+    }
+
     pub fn roll_combat(&mut self) {
         if self.selected_attackers.is_empty() {
             self.error_message = Some("Select at least one attacker".into());
             return;
         }
-        if self.selected_defender.is_empty() && !self.stop_after_wound {
+        if !self.use_manual_defender && self.selected_defender.is_empty() && !self.stop_after_wound {
             self.error_message = Some("Select a defender".into());
             return;
         }
@@ -121,7 +155,9 @@ impl AoSApp {
             .iter()
             .find(|u| u.id == self.selected_attackers[0])
             .cloned();
-        let defender = if self.stop_after_wound && self.selected_defender.is_empty() {
+        let defender = if self.use_manual_defender {
+            Some(self.manual_defender_unit())
+        } else if self.stop_after_wound && self.selected_defender.is_empty() {
             Some(crate::data::models::Unit {
                 id: "none".into(),
                 name: "Defender (not selected)".into(),
@@ -168,9 +204,11 @@ impl AoSApp {
                         // Update unified recently-used list before storing result.
                         // Insert defender first, then attacker, so attacker ends up at index 0
                         // (most recent) matching the typical selection flow.
-                        if let Some(unit) = self.units.iter().find(|u| u.name == defender.name) {
-                            self.recent_units.retain(|(id, _)| id != &unit.id);
-                            self.recent_units.insert(0, (unit.id.clone(), unit.name.clone()));
+                        if !self.use_manual_defender {
+                            if let Some(unit) = self.units.iter().find(|u| u.name == defender.name) {
+                                self.recent_units.retain(|(id, _)| id != &unit.id);
+                                self.recent_units.insert(0, (unit.id.clone(), unit.name.clone()));
+                            }
                         }
                         if let Some(unit) = self.units.iter().find(|u| u.name == attacker.name) {
                             self.recent_units.retain(|(id, _)| id != &unit.id);
@@ -303,23 +341,24 @@ impl eframe::App for AoSApp {
                                 .find(|u| u.name == attacker)
                                 .cloned()
                                 .unwrap();
-                            let defender_unit =
-                                if self.stop_after_wound && self.selected_defender.is_empty() {
-                                    crate::data::models::Unit {
-                                        id: "none".into(),
-                                        name: "Defender (not selected)".into(),
-                                        faction: "-".into(),
-                                        save: 7,
-                                        ward: None,
-                                        weapons: vec![],
-                                    }
-                                } else {
-                                    self.units
-                                        .iter()
-                                        .find(|u| u.name == defender)
-                                        .cloned()
-                                        .unwrap()
-                                };
+                            let defender_unit = if self.use_manual_defender {
+                                self.manual_defender_unit()
+                            } else if self.stop_after_wound && self.selected_defender.is_empty() {
+                                crate::data::models::Unit {
+                                    id: "none".into(),
+                                    name: "Defender (not selected)".into(),
+                                    faction: "-".into(),
+                                    save: 7,
+                                    ward: None,
+                                    weapons: vec![],
+                                }
+                            } else {
+                                self.units
+                                    .iter()
+                                    .find(|u| u.name == defender)
+                                    .cloned()
+                                    .unwrap()
+                            };
                             let weapon_obj = attacker_unit
                                 .weapons
                                 .iter()
@@ -403,5 +442,137 @@ impl eframe::App for AoSApp {
                 });
             });
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper to create a minimal AoSApp for testing `manual_defender_unit`.
+    fn make_app(save: u8, ward: Option<u8>) -> AoSApp {
+        AoSApp {
+            units: Vec::new(),
+            selected_attackers: Vec::new(),
+            selected_weapon: String::new(),
+            selected_defender: String::new(),
+            use_manual_defender: true,
+            manual_defender_save: save,
+            manual_defender_ward: ward,
+            num_models: 1,
+            has_champion: false,
+            use_attack_override: false,
+            attack_override: 10,
+            include_ward: true,
+            stop_after_wound: false,
+            attacker_search: String::new(),
+            defender_search: String::new(),
+            attacker_panel_height: 260.0,
+            defender_panel_height: 140.0,
+            hit_modifier: 0,
+            wound_modifier: 0,
+            rend_modifier: 0,
+            damage_modifier: 0,
+            attack_modifier: 0,
+            crit_effect_override: None,
+            last_selected_weapon: String::new(),
+            current_result: None,
+            combat_log: Vec::new(),
+            error_message: None,
+            simulation_result: None,
+            simulation_rx: None,
+            is_simulating: false,
+            recent_units: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn manual_defender_unit_default_state() {
+        // save=4, ward=None (default state)
+        let app = make_app(4, None);
+        let unit = app.manual_defender_unit();
+
+        assert_eq!(unit.id, "manual_defender");
+        assert_eq!(unit.name, "Manual (Save 4, Ward None)");
+        assert_eq!(unit.faction, "Manual");
+        assert_eq!(unit.save, 4);
+        assert_eq!(unit.ward, None);
+        assert!(unit.weapons.is_empty());
+    }
+
+    #[test]
+    fn manual_defender_unit_with_save_and_ward() {
+        // save=3, ward=Some(5)
+        let app = make_app(3, Some(5));
+        let unit = app.manual_defender_unit();
+
+        assert_eq!(unit.id, "manual_defender");
+        assert_eq!(unit.name, "Manual (Save 3, Ward 5+)");
+        assert_eq!(unit.faction, "Manual");
+        assert_eq!(unit.save, 3);
+        assert_eq!(unit.ward, Some(5));
+        assert!(unit.weapons.is_empty());
+    }
+
+    #[test]
+    fn manual_defender_unit_no_save_flag() {
+        // save=7, ward=None — should include "(no save)" in name
+        let app = make_app(7, None);
+        let unit = app.manual_defender_unit();
+
+        assert_eq!(unit.id, "manual_defender");
+        assert_eq!(unit.name, "Manual (Save 7 (no save), Ward None)");
+        assert_eq!(unit.faction, "Manual");
+        assert_eq!(unit.save, 7);
+        assert_eq!(unit.ward, None);
+        assert!(unit.weapons.is_empty());
+    }
+
+    #[test]
+    fn manual_defender_unit_no_save_with_ward() {
+        // save=7, ward=Some(4) — still has "(no save)" but includes ward
+        let app = make_app(7, Some(4));
+        let unit = app.manual_defender_unit();
+
+        assert_eq!(unit.id, "manual_defender");
+        assert_eq!(unit.name, "Manual (Save 7 (no save), Ward 4+)");
+        assert_eq!(unit.save, 7);
+        assert_eq!(unit.ward, Some(4));
+        assert!(unit.weapons.is_empty());
+    }
+
+    #[test]
+    fn manual_defender_unit_weapons_always_empty() {
+        // Ensure weapons is always empty regardless of save/ward values
+        for save in 1..=7 {
+            for ward in [None, Some(1), Some(6)] {
+                let app = make_app(save, ward);
+                let unit = app.manual_defender_unit();
+                assert!(
+                    unit.weapons.is_empty(),
+                    "weapons should be empty for save={save}, ward={ward:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn manual_defender_unit_name_formatting_boundaries() {
+        // Test name formatting for boundary save values (1-7)
+        let expected_names = [
+            ("Manual (Save 1, Ward None)", 1, None),
+            ("Manual (Save 2, Ward None)", 2, None),
+            ("Manual (Save 3, Ward None)", 3, None),
+            ("Manual (Save 4, Ward None)", 4, None),
+            ("Manual (Save 5, Ward None)", 5, None),
+            ("Manual (Save 6, Ward None)", 6, None),
+            ("Manual (Save 7 (no save), Ward None)", 7, None),
+        ];
+
+        for (expected_name, save, ward) in expected_names {
+            let app = make_app(save, ward);
+            let unit = app.manual_defender_unit();
+            assert_eq!(unit.name, expected_name, "name mismatch for save={save}");
+        }
     }
 }
