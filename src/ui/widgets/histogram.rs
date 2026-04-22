@@ -1,4 +1,11 @@
+//! Histogram visualization widget using `egui_plot::BarChart`.
+//!
+//! Uses `egui_plot`'s `BarChart` for proper axis scaling, grid lines, and zoom support
+//! rather than custom painter primitives. This provides better UX with large datasets
+//! common in Monte Carlo simulations.
+
 use eframe::egui;
+use egui_plot::{Bar, BarChart, Legend, Plot, VLine};
 
 use crate::combat::simulation::HistogramBin;
 
@@ -25,68 +32,37 @@ impl<'a> HistogramDisplay<'a> {
             return;
         }
 
-        let max_count = self.bins.iter().map(|b| b.count).max().unwrap_or(1) as f64;
         let bsize = bin_size(self.bins).max(1) as f64;
-        let bar_width = 24.0f32;
-        let chart_height = 150.0f32;
-        let spacing = 4.0f32;
-        let total_width = self.bins.len() as f32 * (bar_width + spacing);
+        let actual_f = self.actual_value as f64;
 
-        ui.horizontal(|ui| {
-            // Y-axis labels
-            ui.vertical(|ui| {
-                ui.set_min_width(30.0);
-                ui.add_space(4.0);
-                ui.label("100%");
-                ui.add_space(chart_height / 2.0 - 16.0);
-                ui.label("50%");
-                ui.add_space(chart_height / 2.0 - 16.0);
-                ui.label("0%");
+        let bars: Vec<Bar> = self
+            .bins
+            .iter()
+            .map(|bin| {
+                let center = bin.value as f64 + bsize / 2.0;
+                let is_actual =
+                    self.actual_value >= bin.value && self.actual_value < bin.value + bsize as usize;
+                let color = if is_actual {
+                    egui::Color32::from_rgb(255, 100, 100)
+                } else {
+                    egui::Color32::from_rgb(100, 150, 255)
+                };
+                Bar::new(center, bin.count as f64)
+                    .width(bsize)
+                    .fill(color)
+            })
+            .collect();
+
+        let chart = BarChart::new(bars).name("Simulations");
+
+        Plot::new("damage_histogram")
+            .legend(Legend::default())
+            .x_axis_label("Damage")
+            .y_axis_label("Simulations")
+            .show(ui, |plot_ui| {
+                plot_ui.bar_chart(chart);
+                plot_ui.vline(VLine::new(actual_f).name("Your roll"));
             });
-
-            ui.vertical(|ui| {
-                let (rect, _response) = ui.allocate_exact_size(
-                    egui::vec2(total_width, chart_height),
-                    egui::Sense::hover(),
-                );
-                let painter = ui.painter_at(rect);
-
-                for (i, bin) in self.bins.iter().enumerate() {
-                    let height = (bin.count as f64 / max_count) as f32 * chart_height;
-                    let x = rect.min.x + i as f32 * (bar_width + spacing);
-                    let y = rect.max.y - height;
-
-                    let is_actual = self.actual_value >= bin.value
-                        && self.actual_value < bin.value + bsize as usize;
-                    let color = if is_actual {
-                        egui::Color32::from_rgb(255, 100, 100)
-                    } else {
-                        egui::Color32::from_rgb(100, 150, 255)
-                    };
-
-                    let bar_rect =
-                        egui::Rect::from_min_size(egui::pos2(x, y), egui::vec2(bar_width, height));
-                    painter.rect_filled(bar_rect, 2.0, color);
-
-                    // X-axis label
-                    let label = if bsize > 1.0 {
-                        format!("{}-{}", bin.value, bin.value + bsize as usize - 1)
-                    } else {
-                        bin.value.to_string()
-                    };
-                    painter.text(
-                        egui::pos2(x + bar_width / 2.0, rect.max.y + 14.0),
-                        egui::Align2::CENTER_TOP,
-                        label,
-                        egui::FontId::proportional(10.0),
-                        ui.visuals().text_color(),
-                    );
-                }
-
-                // Need extra space for labels below
-                ui.allocate_space(egui::vec2(total_width, 20.0));
-            });
-        });
 
         ui.horizontal(|ui| {
             ui.colored_label(egui::Color32::from_rgb(255, 100, 100), "Your roll");
@@ -102,4 +78,41 @@ fn bin_size(bins: &[HistogramBin]) -> usize {
     let first = bins[0].value;
     let second = bins[1].value;
     second.saturating_sub(first)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_bin(value: usize) -> HistogramBin {
+        HistogramBin {
+            value,
+            count: 1,
+            percentage: 0.0,
+        }
+    }
+
+    #[test]
+    fn test_bin_size_empty() {
+        let bins: [HistogramBin; 0] = [];
+        assert_eq!(bin_size(&bins), 1);
+    }
+
+    #[test]
+    fn test_bin_size_single() {
+        let bins = [make_bin(10)];
+        assert_eq!(bin_size(&bins), 1);
+    }
+
+    #[test]
+    fn test_bin_size_two_bins_diff_1() {
+        let bins = [make_bin(10), make_bin(11)];
+        assert_eq!(bin_size(&bins), 1);
+    }
+
+    #[test]
+    fn test_bin_size_two_bins_diff_5() {
+        let bins = [make_bin(10), make_bin(15)];
+        assert_eq!(bin_size(&bins), 5);
+    }
 }
