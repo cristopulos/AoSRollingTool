@@ -15,47 +15,48 @@ impl<'a> RecentPanel<'a> {
         ui.heading("Recently Used");
         ui.separator();
 
-        // --- Attackers ---
-        ui.label("Attackers:");
-        if self.app.recent_attackers.is_empty() {
-            ui.label(egui::RichText::new("None yet").weak());
+        if self.app.recent_units.is_empty() {
+            ui.label(egui::RichText::new("No recent units yet").weak());
         } else {
             egui::ScrollArea::vertical()
-                .id_salt("recent_attackers")
-                .max_height(300.0)
+                .id_salt("recent_units")
+                .max_height(600.0)
                 .show(ui, |ui| {
-                    for (id, name) in self.app.recent_attackers.iter() {
-                        let selected = self.app.selected_attackers.contains(id);
-                        if ui.radio(selected, name).clicked() {
-                            self.app.selected_attackers.clear();
-                            self.app.selected_attackers.push(id.clone());
-                            // Auto-select first weapon
-                            if let Some(unit) = self.app.units.iter().find(|u| &u.id == id) {
-                                if !unit.weapons.is_empty() {
-                                    self.app.selected_weapon = unit.weapons[0].name.clone();
+                    for (id, name) in self.app.recent_units.iter() {
+                        ui.group(|ui| {
+                            ui.horizontal(|ui| {
+                                ui.label(egui::RichText::new(name).strong());
+                            });
+                            ui.horizontal(|ui| {
+                                // Attacker role radio
+                                let is_attacker = self.app.selected_attackers.contains(id);
+                                if ui.radio(is_attacker, "Attacker").clicked() {
+                                    self.app.selected_attackers.clear();
+                                    self.app.selected_attackers.push(id.clone());
+                                    // Prevent dual-role: clear defender if same unit
+                                    if self.app.selected_defender == *id {
+                                        self.app.selected_defender.clear();
+                                    }
+                                    // Auto-select first weapon
+                                    if let Some(unit) =
+                                        self.app.units.iter().find(|u| &u.id == id)
+                                    {
+                                        if !unit.weapons.is_empty() {
+                                            self.app.selected_weapon =
+                                                unit.weapons[0].name.clone();
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                    }
-                });
-        }
 
-        ui.separator();
-
-        // --- Defenders ---
-        ui.label("Defenders:");
-        if self.app.recent_defenders.is_empty() {
-            ui.label(egui::RichText::new("None yet").weak());
-        } else {
-            egui::ScrollArea::vertical()
-                .id_salt("recent_defenders")
-                .max_height(300.0)
-                .show(ui, |ui| {
-                    for (id, name) in self.app.recent_defenders.iter() {
-                        let selected = self.app.selected_defender == *id;
-                        if ui.radio(selected, name).clicked() {
-                            self.app.selected_defender = id.clone();
-                        }
+                                // Defender role radio
+                                let is_defender = self.app.selected_defender == *id;
+                                if ui.radio(is_defender, "Defender").clicked() {
+                                    self.app.selected_defender = id.clone();
+                                    // Prevent dual-role: clear attacker if same unit
+                                    self.app.selected_attackers.retain(|a| a != id);
+                                }
+                            });
+                        });
                     }
                 });
         }

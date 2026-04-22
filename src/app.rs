@@ -47,12 +47,11 @@ pub struct AoSApp {
     pub simulation_result: Option<SimulationResult>,
     pub simulation_rx: Option<Receiver<SimulationResult>>,
     pub is_simulating: bool,
-    /// Recently used attacker units (unit_id, unit_name) from the current session.
-    /// Updated after each combat roll. Most recent first. No entry limit.
-    pub recent_attackers: Vec<(String, String)>,
-    /// Recently used defender units (unit_id, unit_name) from the current session.
-    /// Updated after each combat roll. Most recent first. No entry limit.
-    pub recent_defenders: Vec<(String, String)>,
+    /// All recently used units (unit_id, unit_name), merged from both attacker
+    /// and defender roles. Updated after each combat roll. Most recent first.
+    /// No entry limit. Selecting a unit from this list lets the user pick
+    /// whether it should be attacker or defender.
+    pub recent_units: Vec<(String, String)>,
 }
 
 impl AoSApp {
@@ -86,8 +85,7 @@ impl AoSApp {
             simulation_result: None,
             simulation_rx: None,
             is_simulating: false,
-            recent_attackers: Vec::new(),
-            recent_defenders: Vec::new(),
+            recent_units: Vec::new(),
         }
     }
 
@@ -167,14 +165,16 @@ impl AoSApp {
                             self.crit_effect_override.clone(),
                             None,
                         );
-                        // Update recently-used lists before storing result
-                        if let Some(unit) = self.units.iter().find(|u| u.name == attacker.name) {
-                            self.recent_attackers.retain(|(id, _)| id != &unit.id);
-                            self.recent_attackers.insert(0, (unit.id.clone(), unit.name.clone()));
-                        }
+                        // Update unified recently-used list before storing result.
+                        // Insert defender first, then attacker, so attacker ends up at index 0
+                        // (most recent) matching the typical selection flow.
                         if let Some(unit) = self.units.iter().find(|u| u.name == defender.name) {
-                            self.recent_defenders.retain(|(id, _)| id != &unit.id);
-                            self.recent_defenders.insert(0, (unit.id.clone(), unit.name.clone()));
+                            self.recent_units.retain(|(id, _)| id != &unit.id);
+                            self.recent_units.insert(0, (unit.id.clone(), unit.name.clone()));
+                        }
+                        if let Some(unit) = self.units.iter().find(|u| u.name == attacker.name) {
+                            self.recent_units.retain(|(id, _)| id != &unit.id);
+                            self.recent_units.insert(0, (unit.id.clone(), unit.name.clone()));
                         }
 
                         self.combat_log.push(result.clone());
