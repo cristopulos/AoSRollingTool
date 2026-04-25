@@ -495,6 +495,7 @@ pub fn resolve_combat(
             stopped_after_wound: true,
             total_hits: hits + auto_wounds + extra_hits,
             total_wounds,
+            weapon_index: 0,
         };
     }
 
@@ -646,6 +647,7 @@ pub fn resolve_combat(
         stopped_after_wound: false,
         total_hits: 0,
         total_wounds: 0,
+        weapon_index: 0,
     }
 }
 
@@ -3031,5 +3033,102 @@ mod tests {
         let ward_phase = &result.phases[4];
         assert_eq!(ward_phase.crit_extra_count, 0);
         assert!(ward_phase.annotation.is_none());
+    }
+
+    // === Weapon index tests ===
+
+    #[test]
+    fn combat_result_weapon_index_field_is_readable() {
+        // Verify CombatResult can be constructed with weapon_index and the field is readable
+        use crate::combat::types::CombatResult;
+        use crate::combat::types::Phase;
+
+        let result = CombatResult {
+            attacker_name: "Test Attacker".into(),
+            weapon_name: "Test Weapon".into(),
+            defender_name: "Test Defender".into(),
+            phases: vec![
+                PhaseResult {
+                    phase: Phase::Hit,
+                    rolls: vec![],
+                    successes: 0,
+                    failures: 0,
+                    total_output: 0,
+                    auto_fails: false,
+                    skipped: false,
+                    description: "Hit (3+)".into(),
+                    variance_step: None,
+                    annotation: None,
+                    crit_extra_count: 0,
+                },
+            ],
+            final_damage: 5,
+            mortal_wounds: 0,
+            stopped_after_wound: false,
+            total_hits: 0,
+            total_wounds: 0,
+            weapon_index: 3,
+        };
+
+        assert_eq!(result.weapon_index, 3);
+    }
+
+    #[test]
+    fn resolve_combat_returns_weapon_index_zero() {
+        // Verify resolve_combat returns a CombatResult with weapon_index == 0 (default)
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+        let weapon = test_weapon();
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false, // Full combat, not stop_after_wound
+            0,    // hit_modifier
+            0,    // wound_modifier
+            0,    // rend_modifier
+            0,    // damage_modifier
+            0,    // attack_modifier
+            None,
+            Some(&[4, 5, 6, 3, 2]),
+        );
+
+        assert_eq!(result.weapon_index, 0, "resolve_combat should set weapon_index to 0 by default");
+    }
+
+    #[test]
+    fn resolve_combat_stop_after_wound_sets_weapon_index_zero() {
+        // Verify resolve_combat also sets weapon_index=0 when stop_after_wound is true
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+        let weapon = test_weapon();
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            0,
+            0,
+            0,
+            0,
+            0,    // attack_modifier
+            None,
+            Some(&[4, 5, 6, 3, 2]),
+        );
+
+        assert!(result.stopped_after_wound);
+        assert_eq!(result.weapon_index, 0, "resolve_combat with stop_after_wound should set weapon_index to 0");
     }
 }

@@ -42,8 +42,9 @@ impl<'a> RecentPanel<'a> {
                                         self.app.units.iter().find(|u| &u.id == id)
                                     {
                                         if !unit.weapons.is_empty() {
-                                            self.app.selected_weapon =
-                                                unit.weapons[0].name.clone();
+                                            self.app.selected_weapon_index = Some(0);
+                                        } else {
+                                            self.app.selected_weapon_index = None;
                                         }
                                     }
                                 }

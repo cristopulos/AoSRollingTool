@@ -16,7 +16,8 @@ use crate::ui::panels::unit_panel::UnitPanel;
 pub struct AoSApp {
     pub units: Vec<Unit>,
     pub selected_attackers: Vec<String>, // Unit IDs
-    pub selected_weapon: String,
+    /// Index into the current attacker's weapon list. `None` = no weapon selected.
+    pub selected_weapon_index: Option<usize>,
     pub selected_defender: String,
     /// When true, use manually entered save/ward values instead of unit list selection.
     pub use_manual_defender: bool,
@@ -42,9 +43,9 @@ pub struct AoSApp {
     pub attack_modifier: i8,
     /// Overrides the weapon's built-in crit effect when set.
     pub crit_effect_override: Option<CritEffect>,
-    /// Tracks the last selected weapon name to detect weapon changes.
+    /// Tracks the last selected weapon index to detect weapon changes.
     /// When the selected weapon changes, crit_effect_override is reset to None.
-    pub last_selected_weapon: String,
+    pub last_selected_weapon_index: Option<usize>,
     pub current_result: Option<CombatResult>,
     pub combat_log: Vec<CombatResult>,
     pub error_message: Option<String>,
@@ -64,7 +65,7 @@ impl AoSApp {
         Self {
             units,
             selected_attackers: Vec::new(),
-            selected_weapon: String::new(),
+            selected_weapon_index: None,
             selected_defender: String::new(),
             use_manual_defender: false,
             manual_defender_save: 4,
@@ -85,7 +86,7 @@ impl AoSApp {
             damage_modifier: 0,
             attack_modifier: 0,
             crit_effect_override: None,
-            last_selected_weapon: String::new(),
+            last_selected_weapon_index: None,
             current_result: None,
             combat_log: Vec::new(),
             error_message: None,
@@ -144,7 +145,7 @@ impl AoSApp {
             self.error_message = Some("Select a defender".into());
             return;
         }
-        if self.selected_weapon.is_empty() {
+        if self.selected_weapon_index.is_none() {
             self.error_message = Some("Select a weapon".into());
             return;
         }
@@ -175,15 +176,14 @@ impl AoSApp {
 
         match (attacker, defender) {
             (Some(attacker), Some(defender)) => {
-                let weapon = attacker
-                    .weapons
-                    .iter()
-                    .find(|w| w.name == self.selected_weapon)
+                let weapon = self
+                    .selected_weapon_index
+                    .and_then(|idx| attacker.weapons.get(idx))
                     .cloned();
 
                 match weapon {
                     Some(weapon) => {
-                        let result = resolve_combat(
+                        let mut result = resolve_combat(
                             &attacker,
                             &defender,
                             &weapon,
@@ -201,6 +201,7 @@ impl AoSApp {
                             self.crit_effect_override.clone(),
                             None,
                         );
+                        result.weapon_index = self.selected_weapon_index.unwrap_or(0);
                         // Update unified recently-used list before storing result.
                         // Insert defender first, then attacker, so attacker ends up at index 0
                         // (most recent) matching the typical selection flow.
@@ -332,7 +333,6 @@ impl eframe::App for AoSApp {
 
                             let attacker = result.attacker_name.clone();
                             let defender = result.defender_name.clone();
-                            let weapon = result.weapon_name.clone();
 
                             // Look up the original units and weapon from state
                             let attacker_unit = self
@@ -361,8 +361,7 @@ impl eframe::App for AoSApp {
                             };
                             let weapon_obj = attacker_unit
                                 .weapons
-                                .iter()
-                                .find(|w| w.name == weapon)
+                                .get(result.weapon_index)
                                 .cloned()
                                 .unwrap();
                             let actual_result = result.clone();
@@ -454,7 +453,7 @@ mod tests {
         AoSApp {
             units: Vec::new(),
             selected_attackers: Vec::new(),
-            selected_weapon: String::new(),
+            selected_weapon_index: None,
             selected_defender: String::new(),
             use_manual_defender: true,
             manual_defender_save: save,
@@ -475,7 +474,7 @@ mod tests {
             damage_modifier: 0,
             attack_modifier: 0,
             crit_effect_override: None,
-            last_selected_weapon: String::new(),
+            last_selected_weapon_index: None,
             current_result: None,
             combat_log: Vec::new(),
             error_message: None,

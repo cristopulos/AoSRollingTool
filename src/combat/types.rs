@@ -87,6 +87,8 @@ pub struct CombatResult {
     /// Total successful wounds (normal wounds + auto-wounds from crits).
     /// Only meaningful when `stopped_after_wound` is true.
     pub total_wounds: usize,
+    /// Index of the weapon used in this combat result, within the attacker's weapons list.
+    pub weapon_index: usize,
 }
 
 #[derive(Debug, Clone, Default)]

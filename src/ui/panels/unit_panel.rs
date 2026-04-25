@@ -99,10 +99,9 @@ impl<'a> UnitPanel<'a> {
                                                 self.app.selected_attackers.push(unit.id.clone());
                                                 // Auto-select first weapon
                                                 if !unit.weapons.is_empty() {
-                                                    self.app.selected_weapon =
-                                                        unit.weapons[0].name.clone();
+                                                    self.app.selected_weapon_index = Some(0);
                                                 } else {
-                                                    self.app.selected_weapon.clear();
+                                                    self.app.selected_weapon_index = None;
                                                 }
                                             }
                                         }
@@ -124,12 +123,24 @@ impl<'a> UnitPanel<'a> {
                     .find(|u| self.app.selected_attackers.contains(&u.id))
                 {
                     ui.label(selected_unit.name.to_string());
+
+                    // Clamp weapon index to valid range for this unit
+                    let max_idx = selected_unit.weapons.len().saturating_sub(1);
+                    if self.app.selected_weapon_index.unwrap_or(0) > max_idx {
+                        self.app.selected_weapon_index =
+                            if selected_unit.weapons.is_empty() {
+                                None
+                            } else {
+                                Some(0)
+                            };
+                    }
+
                     ui.push_id(("weapon_list", selected_unit.id.clone()), |ui| {
-                        for weapon in &selected_unit.weapons {
+                        for (idx, weapon) in selected_unit.weapons.iter().enumerate() {
                             ui.horizontal(|ui| {
                                 ui.radio_value(
-                                    &mut self.app.selected_weapon,
-                                    weapon.name.clone(),
+                                    &mut self.app.selected_weapon_index,
+                                    Some(idx),
                                     format!(
                                         "{} {}",
                                         weapon.name,
@@ -144,9 +155,9 @@ impl<'a> UnitPanel<'a> {
                 // Reset crit effect override when the selected weapon changes.
                 // This prevents stale overrides from applying to a different weapon that
                 // may have a different built-in crit effect or no crit at all.
-                if self.app.selected_weapon != self.app.last_selected_weapon {
+                if self.app.selected_weapon_index != self.app.last_selected_weapon_index {
                     self.app.crit_effect_override = None;
-                    self.app.last_selected_weapon = self.app.selected_weapon.clone();
+                    self.app.last_selected_weapon_index = self.app.selected_weapon_index;
                 }
 
                 // Modifiers section
