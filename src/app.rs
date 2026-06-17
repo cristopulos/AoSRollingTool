@@ -29,6 +29,7 @@ pub struct AoSApp {
     pub attack_override: usize,    // Fixed attack count when override is enabled
     pub include_ward: bool,
     pub stop_after_wound: bool,
+    pub defender_ethereal: bool,
     pub attacker_search: String,
     pub defender_search: String,
     pub attacker_panel_height: f32,
@@ -76,6 +77,7 @@ impl AoSApp {
             attack_override: 10,
             include_ward: true,
             stop_after_wound: false,
+            defender_ethereal: false,
             attacker_search: String::new(),
             defender_search: String::new(),
             attacker_panel_height: 260.0,
@@ -193,6 +195,7 @@ impl AoSApp {
                             self.attack_override,
                             self.include_ward,
                             self.stop_after_wound,
+                            self.defender_ethereal,
                             self.hit_modifier,
                             self.wound_modifier,
                             self.rend_modifier,
@@ -370,6 +373,7 @@ impl eframe::App for AoSApp {
                             let use_attack_override = self.use_attack_override;
                             let attack_override = self.attack_override;
                             let include_ward = self.include_ward;
+                            let defender_ethereal = self.defender_ethereal;
                             let hit_modifier = self.hit_modifier;
                             let wound_modifier = self.wound_modifier;
                             let rend_modifier = self.rend_modifier;
@@ -387,6 +391,7 @@ impl eframe::App for AoSApp {
                                     use_attack_override,
                                     attack_override,
                                     include_ward,
+                                    defender_ethereal,
                                     hit_modifier,
                                     wound_modifier,
                                     rend_modifier,
@@ -464,6 +469,7 @@ mod tests {
             attack_override: 10,
             include_ward: true,
             stop_after_wound: false,
+            defender_ethereal: false,
             attacker_search: String::new(),
             defender_search: String::new(),
             attacker_panel_height: 260.0,

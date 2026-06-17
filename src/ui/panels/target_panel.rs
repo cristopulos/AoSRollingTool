@@ -16,6 +16,10 @@ impl<'a> TargetPanel<'a> {
 
         ui.checkbox(&mut self.app.use_manual_defender, "Manual Defender");
         ui.checkbox(&mut self.app.include_ward, "Include Ward Saves");
+        ui.checkbox(
+            &mut self.app.defender_ethereal,
+            "Ethereal (ignore rend)",
+        );
         ui.separator();
 
         if self.app.use_manual_defender {

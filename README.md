@@ -15,7 +15,8 @@ A Rust-based desktop application with a GUI for visualizing combat sequence roll
 - **Critical Hit Support**: Auto-wound, Extra Hit, and Mortal Wounds (with optional override dropdown)
 - **Ward Saves**: Optional ward phase per unit profile
 - **Stop After Wound**: Checkbox to stop the combat sequence after Hit and Wound phases, allowing the defender to roll saves externally (useful for in-person games where each player rolls their own dice).
-- **Manual Defender**: When enabled, hides the unit list and lets you input save (1-7, default 4) and optional ward (1-6, default none) directly. A save value of 7 means "no save" (auto-fail). Works with both single rolls and 10,000-run simulations. The "Include Ward Saves" checkbox controls whether the ward phase is actually tested.: When Monte Carlo simulation is enabled, displays percentile ranking, mean, and quartile statistics. The damage distribution is visualized with a bar chart where each unique damage value gets its own bar (no grouping), with count labels above each bar. The chart includes vertical markers for your actual roll, and 25th/75th percentile lines for quartile reference.
+- **Manual Defender**: When enabled, hides the unit list and lets you input save (1-7, default 4) and optional ward (1-6, default none) directly. A save value of 7 means "no save" (auto-fail). Works with both single rolls and 10,000-run simulations. The "Include Ward Saves" checkbox controls whether the ward phase is actually tested.
+- **Monte Carlo Simulation**: Runs up to 10,000 simulations to display percentile ranking, mean, and quartile statistics. The damage distribution is visualized with a bar chart where each unique damage value gets its own bar (no grouping), with count labels above each bar. The chart includes vertical markers for your actual roll, and 25th/75th percentile lines for quartile reference.
 
 ## Supported Factions
 
@@ -73,7 +74,7 @@ Edit `resources/units.json` to add your own units and weapons:
 
 1. **Hit**: Roll D6 per attack. 6 = critical hit (weapon-specific effect). Target can be modified by weapon modifiers.
 2. **Wound**: Roll D6 per hit. Target is the weapon's `to_wound` value, adjustable via modifiers.
-3. **Save**: Roll D6 per wound. Target is `defender.save - weapon.rend`. Modifiers can adjust effective rend. If target > 6, auto-fail.
+3. **Save**: Roll D6 per wound. Target is `defender.save - weapon.rend`. Modifiers can adjust effective rend. If target > 6, auto-fail. **Ethereal**: When the defender is designated as ethereal, rend (both weapon rend and the rend modifier) is ignored, so the target is just `defender.save`.
 4. **Damage**: Unsaved wounds × weapon damage. Damage can be modified (flat values and dice expressions both supported).
 5. **Ward** (optional): D6 per damage point. Target is defender's ward value.
 

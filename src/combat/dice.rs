@@ -115,7 +115,7 @@ mod tests {
     fn roll_d6_returns_values_between_1_and_6() {
         for _ in 0..1000 {
             let result = roll_d6();
-            assert!(result >= 1 && result <= 6);
+            assert!((1..=6).contains(&result));
         }
     }
 
@@ -123,7 +123,7 @@ mod tests {
     fn roll_multiple_d6_returns_correct_count() {
         let results = roll_d6_batch(10);
         assert_eq!(results.len(), 10);
-        assert!(results.iter().all(|&r| r >= 1 && r <= 6));
+        assert!(results.iter().all(|&r| (1..=6).contains(&r)));
     }
 
     #[test]
@@ -135,20 +135,20 @@ mod tests {
     #[test]
     fn parse_attacks_d6() {
         let result = parse_dice_string("D6").unwrap();
-        assert!(result >= 1 && result <= 6);
+        assert!((1..=6).contains(&result));
     }
 
     #[test]
     fn parse_attacks_2d6() {
         let result = parse_dice_string("2D6").unwrap();
-        assert!(result >= 2 && result <= 12);
+        assert!((2..=12).contains(&result));
     }
 
     #[test]
     fn parse_damage_with_modifier() {
         // D3+2 should return 3-5
         let result = parse_dice_string("D3+2").unwrap();
-        assert!(result >= 3 && result <= 5);
+        assert!((3..=5).contains(&result));
     }
 
     #[test]

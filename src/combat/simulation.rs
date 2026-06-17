@@ -41,7 +41,7 @@ pub struct SimulationResult {
 
 /// Run `n_runs` Monte Carlo simulations and compute statistics.
 /// All modifiers (hit_modifier, wound_modifier, rend_modifier, damage_modifier,
-/// attack_modifier, crit_effect_override) affect each simulation run the same way as in resolve_combat().
+/// attack_modifier, crit_effect_override, defender_ethereal) affect each simulation run the same way as in resolve_combat().
 #[allow(clippy::too_many_arguments)]
 pub fn run_simulation(
     attacker: &Unit,
@@ -52,6 +52,7 @@ pub fn run_simulation(
     use_attack_override: bool,
     attack_override: usize,
     include_ward: bool,
+    defender_ethereal: bool,
     hit_modifier: i8,
     wound_modifier: i8,
     rend_modifier: i8,
@@ -75,6 +76,7 @@ pub fn run_simulation(
                 attack_override,
                 include_ward,
                 false, // never stop early in simulation
+                defender_ethereal,
                 hit_modifier,
                 wound_modifier,
                 rend_modifier,
@@ -212,6 +214,5 @@ mod tests {
         assert!(!bins.is_empty());
         // With bin_size=1, every value from 0-49 gets its own bin
         assert_eq!(bins.len(), 50);
-        assert!(bins.iter().all(|b| b.value % 1 == 0));
     }
 }

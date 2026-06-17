@@ -39,9 +39,53 @@ fn apply_attack_modifier(attack_str: &str, modifier: i8) -> String {
 
 /// Calculate the save target number.
 /// If the result is > 6, saves auto-fail.
-pub fn calculate_save_target(defender_save: u8, weapon_rend: i8, rend_modifier: i8) -> u8 {
-    let target = defender_save as i8 - weapon_rend + rend_modifier;
-    target.max(0) as u8
+/// An ethereal defender ignores all rend, so the target is simply the base save.
+pub fn calculate_save_target(
+    defender_save: u8,
+    weapon_rend: i8,
+    rend_modifier: i8,
+    defender_ethereal: bool,
+) -> u8 {
+    if defender_ethereal {
+        defender_save
+    } else {
+        let target = defender_save as i8 - weapon_rend + rend_modifier;
+        target.max(0) as u8
+    }
+}
+
+/// Compute the save target and the human-readable Save phase description.
+/// `pending` selects the "Stop after wound" wording (appends " - Pending").
+fn save_info(
+    defender_save: u8,
+    weapon_rend: i8,
+    rend_modifier: i8,
+    defender_ethereal: bool,
+    pending: bool,
+) -> (u8, String) {
+    let save_target =
+        calculate_save_target(defender_save, weapon_rend, rend_modifier, defender_ethereal);
+    let pending_suffix = if pending { " - Pending" } else { "" };
+    let desc = if defender_ethereal {
+        format!(
+            "Save ({}+) — Ethereal (rend ignored){}",
+            defender_save, pending_suffix
+        )
+    } else if rend_modifier != 0 {
+        let base = calculate_save_target(defender_save, weapon_rend, 0, false);
+        let rend_str = if rend_modifier > 0 {
+            format!("+{}", rend_modifier)
+        } else {
+            rend_modifier.to_string()
+        };
+        format!(
+            "Save ({}+ → {}+) ({} rend){}",
+            base, save_target, rend_str, pending_suffix
+        )
+    } else {
+        format!("Save ({}+){}", save_target, pending_suffix)
+    };
+    (save_target, desc)
 }
 
 /// Resolve the hit phase for a given number of attacks.
@@ -246,6 +290,7 @@ pub fn resolve_combat(
     /* When true, only process Hit and Wound phases. Save, Damage, and Ward phases
     are marked as pending, and the defender rolls saves externally. */
     stop_after_wound: bool,
+    defender_ethereal: bool,
     hit_modifier: i8,
     wound_modifier: i8,
     rend_modifier: i8,
@@ -416,21 +461,8 @@ pub fn resolve_combat(
 
     // Early stop: only process hit and wound phases; mortal wounds from crits are still counted.
     if stop_after_wound {
-        let save_target = calculate_save_target(defender.save, weapon.rend, rend_modifier);
-        let save_desc = if rend_modifier != 0 {
-            format!(
-                "Save ({}+ → {}+) - Pending ({} rend)",
-                calculate_save_target(defender.save, weapon.rend, 0),
-                save_target,
-                if rend_modifier > 0 {
-                    format!("+{}", rend_modifier)
-                } else {
-                    rend_modifier.to_string()
-                }
-            )
-        } else {
-            format!("Save ({}+) - Pending", save_target)
-        };
+        let (_save_target, save_desc) =
+            save_info(defender.save, weapon.rend, rend_modifier, defender_ethereal, true);
         let save_phase = PhaseResult {
             phase: Phase::Save,
             rolls: Vec::new(),
@@ -500,26 +532,12 @@ pub fn resolve_combat(
     }
 
     // Phase 3: Save
-    let save_target = calculate_save_target(defender.save, weapon.rend, rend_modifier);
+    let (save_target, save_desc) =
+        save_info(defender.save, weapon.rend, rend_modifier, defender_ethereal, false);
     let (unsaved, save_rolls, auto_fails) = if total_wounds > 0 {
         resolve_save(save_target, total_wounds, None)
     } else {
         (0, Vec::new(), false)
-    };
-
-    let save_desc = if rend_modifier != 0 {
-        format!(
-            "Save ({}+ → {}+) ({} rend)",
-            calculate_save_target(defender.save, weapon.rend, 0),
-            save_target,
-            if rend_modifier > 0 {
-                format!("+{}", rend_modifier)
-            } else {
-                rend_modifier.to_string()
-            }
-        )
-    } else {
-        format!("Save ({}+)", save_target)
     };
 
     let save_phase = PhaseResult {
@@ -707,20 +725,20 @@ mod tests {
     fn calculate_save_target_basic() {
         // Rend is stored as negative values (-1, -2, etc.)
         // Save 4+ with rend -1 = need 5+ to save (harder)
-        assert_eq!(calculate_save_target(4, 0, 0), 4);
-        assert_eq!(calculate_save_target(4, -1, 0), 5);
-        assert_eq!(calculate_save_target(4, -3, 0), 7);
+        assert_eq!(calculate_save_target(4, 0, 0, false), 4);
+        assert_eq!(calculate_save_target(4, -1, 0, false), 5);
+        assert_eq!(calculate_save_target(4, -3, 0, false), 7);
     }
 
     #[test]
     fn save_auto_fails_when_target_exceeds_6() {
-        let save_target = calculate_save_target(4, -3, 0);
+        let save_target = calculate_save_target(4, -3, 0, false);
         assert!(save_target > 6);
     }
 
     #[test]
     fn extreme_rend_all_wounds_pass() {
-        let save_target = calculate_save_target(3, -5, 0);
+        let save_target = calculate_save_target(3, -5, 0, false);
         assert!(save_target > 6);
 
         let (unsaved, rolls, auto_fails) = resolve_save(save_target, 5, Some(&[]));
@@ -731,7 +749,7 @@ mod tests {
 
     #[test]
     fn weapon_with_zero_rend_normal_save() {
-        let save_target = calculate_save_target(4, 0, 0);
+        let save_target = calculate_save_target(4, 0, 0, false);
         assert_eq!(save_target, 4);
 
         let (unsaved, _rolls, auto_fails) = resolve_save(save_target, 3, Some(&[3, 4, 5]));
@@ -905,6 +923,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -952,6 +971,7 @@ mod tests {
             0,
             false,
             false,
+            false,
             0,
             0,
             0,
@@ -986,6 +1006,7 @@ mod tests {
             false,
             0,
             true,
+            false,
             false,
             0,
             0,
@@ -1029,6 +1050,7 @@ mod tests {
             25,
             false,
             false,
+            false,
             0,
             0,
             0,
@@ -1068,6 +1090,7 @@ mod tests {
             true,
             false,
             0,
+            false,
             false,
             false,
             0,
@@ -1111,6 +1134,7 @@ mod tests {
             20,
             false,
             false,
+            false,
             0,
             0,
             0,
@@ -1140,6 +1164,7 @@ mod tests {
             0,
             true,
             true,
+            false,
             0,
             0,
             0,
@@ -1184,6 +1209,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -1218,6 +1244,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -1251,6 +1278,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -1293,6 +1321,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             1,    // hit_modifier: +1
             0,    // wound_modifier
             0,    // rend_modifier
@@ -1332,6 +1361,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             -1,   // hit_modifier: -1
             0,    // wound_modifier
             0,    // rend_modifier
@@ -1374,6 +1404,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,    // hit_modifier
             1,    // wound_modifier: +1
             0,    // rend_modifier
@@ -1396,11 +1427,11 @@ mod tests {
         // rend_modifier: +1 on rend: -1 with save: 4+ should produce save target 6+
         // Formula: defender_save - weapon_rend + rend_modifier
         // Calculation: 4 - (-1) + 1 = 6
-        assert_eq!(calculate_save_target(4, -1, 1), 6);
+        assert_eq!(calculate_save_target(4, -1, 1, false), 6);
         // rend_modifier: +2 on rend: -1 with save: 4+ should produce save target 7+ (auto-fail)
-        assert_eq!(calculate_save_target(4, -1, 2), 7);
+        assert_eq!(calculate_save_target(4, -1, 2, false), 7);
         // rend_modifier: -1 on rend: -1 with save: 4+ should produce save target 4+
-        assert_eq!(calculate_save_target(4, -1, -1), 4);
+        assert_eq!(calculate_save_target(4, -1, -1, false), 4);
     }
 
     #[test]
@@ -1429,6 +1460,7 @@ mod tests {
             0,
             false,
             false, // Process full combat
+            false,
             0,     // hit_modifier
             0,     // wound_modifier
             0,     // rend_modifier
@@ -1481,6 +1513,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             5,    // hit_modifier: +5
             0,    // wound_modifier
             0,    // rend_modifier
@@ -1520,6 +1553,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -1558,6 +1592,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -1600,6 +1635,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -1638,6 +1674,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -1676,6 +1713,7 @@ mod tests {
             5,    // attack_override
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -1799,6 +1837,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -1833,6 +1872,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -1867,6 +1907,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -1901,6 +1942,7 @@ mod tests {
             true, // has_champion
             false,
             0,
+            false,
             false,
             false,
             0,
@@ -1943,6 +1985,7 @@ mod tests {
             false,
             true, // use_attack_override
             3,    // attack_override
+            false,
             false,
             false,
             0,
@@ -2071,6 +2114,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -2109,6 +2153,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -2144,6 +2189,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -2178,6 +2224,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -2213,6 +2260,7 @@ mod tests {
             0,
             false,
             false, // Full combat (not stop_after_wound)
+            false,
             0,
             0,
             0,
@@ -2250,6 +2298,7 @@ mod tests {
             0,
             false,
             false,
+            false,
             0,
             0,
             0,
@@ -2283,6 +2332,7 @@ mod tests {
             false,
             false,
             0,
+            false,
             false,
             false,
             0,
@@ -2319,6 +2369,7 @@ mod tests {
             0,
             false,
             false, // Full combat
+            false,
             0,
             0,
             0,
@@ -2352,6 +2403,7 @@ mod tests {
             false,
             false,
             0,
+            false,
             false,
             false,
             0,
@@ -2388,6 +2440,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -2421,6 +2474,7 @@ mod tests {
             false,
             false,
             0,
+            false,
             false,
             false,
             0,
@@ -2458,6 +2512,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -2496,6 +2551,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -2531,6 +2587,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -2566,6 +2623,7 @@ mod tests {
             0,
             true, // include_ward
             false,
+            false,
             0,
             0,
             0,
@@ -2596,9 +2654,9 @@ mod tests {
         // Create rolls: 47 hits + 13 misses, with 13 sixes in the hits
         // Rolls: 34 non-crit hits (4-5) + 13 crits (6) + 13 misses (1-3)
         let mut rolls: Vec<u8> = Vec::new();
-        rolls.extend(std::iter::repeat(4u8).take(34)); // 34 normal hits (roll 4)
-        rolls.extend(std::iter::repeat(6u8).take(13)); // 13 sixes (crits)
-        rolls.extend(std::iter::repeat(2u8).take(13)); // 13 misses (roll 2)
+        rolls.extend(std::iter::repeat_n(4u8, 34)); // 34 normal hits (roll 4)
+        rolls.extend(std::iter::repeat_n(6u8, 13)); // 13 sixes (crits)
+        rolls.extend(std::iter::repeat_n(2u8, 13)); // 13 misses (roll 2)
                                                        // Total: 34 + 13 + 13 = 60 rolls
 
         let result = resolve_combat(
@@ -2611,6 +2669,7 @@ mod tests {
             0,
             false,
             false, // Full combat, not stop_after_wound
+            false,
             0,
             0,
             0,
@@ -2667,9 +2726,9 @@ mod tests {
         let defender = test_defender(5, None);
 
         let mut rolls: Vec<u8> = Vec::new();
-        rolls.extend(std::iter::repeat(4u8).take(34)); // 34 normal hits
-        rolls.extend(std::iter::repeat(6u8).take(13)); // 13 sixes
-        rolls.extend(std::iter::repeat(2u8).take(13)); // 13 misses
+        rolls.extend(std::iter::repeat_n(4u8, 34)); // 34 normal hits
+        rolls.extend(std::iter::repeat_n(6u8, 13)); // 13 sixes
+        rolls.extend(std::iter::repeat_n(2u8, 13)); // 13 misses
 
         let result = resolve_combat(
             &attacker,
@@ -2679,6 +2738,7 @@ mod tests {
             false,
             false,
             0,
+            false,
             false,
             false,
             0,
@@ -2748,6 +2808,7 @@ mod tests {
             0,
             false,
             false,
+            false,
             0,
             0,
             0,
@@ -2792,13 +2853,14 @@ mod tests {
             0,
             false,
             false,
+            false,
             0,
             0,
             0,
             0,
             0,
             None,
-            Some(&[6, 6]), // Both crits
+            Some(&[6, 6]), // Both crits; MW damage is internally rolled for D6 so we assert exact range
         );
 
         // Both are MW, bypass wound/save
@@ -2833,6 +2895,7 @@ mod tests {
             false,
             false,
             0,
+            false,
             false,
             false,
             0,
@@ -2876,6 +2939,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -2913,6 +2977,7 @@ mod tests {
             0,
             false,
             true,
+            false,
             0,
             0,
             0,
@@ -2944,6 +3009,7 @@ mod tests {
             false,
             0,
             true, // include_ward
+            false,
             false,
             0,
             0,
@@ -2985,6 +3051,7 @@ mod tests {
             0,
             false,
             false,
+            false,
             0,
             0,
             0,
@@ -3020,6 +3087,7 @@ mod tests {
             false,
             0,
             true, // include_ward
+            false,
             false,
             0,
             0,
@@ -3090,6 +3158,7 @@ mod tests {
             0,
             false,
             false, // Full combat, not stop_after_wound
+            false,
             0,    // hit_modifier
             0,    // wound_modifier
             0,    // rend_modifier
@@ -3119,6 +3188,7 @@ mod tests {
             0,
             false,
             true, // stop_after_wound
+            false,
             0,
             0,
             0,
@@ -3131,4 +3201,151 @@ mod tests {
         assert!(result.stopped_after_wound);
         assert_eq!(result.weapon_index, 0, "resolve_combat with stop_after_wound should set weapon_index to 0");
     }
+
+
+    #[test]
+    fn calculate_save_target_ethereal_ignores_rend() {
+        // Weapon rend ignored
+        assert_eq!(calculate_save_target(4, -2, 0, true), 4);
+        assert_eq!(calculate_save_target(4, -2, 0, false), 6);
+        // Rend modifier ignored
+        assert_eq!(calculate_save_target(4, 0, 2, true), 4);
+        assert_eq!(calculate_save_target(4, 0, 2, false), 6);
+        // Both ignored together
+        assert_eq!(calculate_save_target(4, -1, 1, true), 4);
+        assert_eq!(calculate_save_target(4, -1, 1, false), 6);
+        // Ethereal does not change a "no save" (7) target
+        assert_eq!(calculate_save_target(7, -10, 0, true), 7);
+    }
+
+    #[test]
+    fn save_info_helper_ethereal_format() {
+        let (target, desc) = save_info(4, -2, 0, true, false);
+        assert_eq!(target, 4);
+        assert!(desc.contains("Ethereal"));
+        assert!(desc.contains("rend ignored"));
+
+        let (target, desc) = save_info(4, -2, 0, true, true);
+        assert_eq!(target, 4);
+        assert!(desc.contains("Ethereal"));
+        assert!(desc.contains("Pending"));
+    }
+
+    #[test]
+    fn ethereal_resolve_save_ignores_weapon_rend() {
+        // Deterministic save rolls: 5 fails a 6+ target but saves a 4+ target.
+        let normal_target = calculate_save_target(4, -2, 0, false);
+        let ethereal_target = calculate_save_target(4, -2, 0, true);
+        assert_eq!(normal_target, 6);
+        assert_eq!(ethereal_target, 4);
+
+        let (unsaved_normal, _, _) = resolve_save(normal_target, 1, Some(&[5]));
+        let (unsaved_ethereal, _, _) = resolve_save(ethereal_target, 1, Some(&[5]));
+        assert_eq!(unsaved_normal, 1);
+        assert_eq!(unsaved_ethereal, 0);
+    }
+
+    #[test]
+    fn ethereal_resolve_save_ignores_rend_modifier() {
+        // Deterministic save rolls: 5 fails a 6+ target but saves a 4+ target.
+        let normal_target = calculate_save_target(4, 0, 2, false);
+        let ethereal_target = calculate_save_target(4, 0, 2, true);
+        assert_eq!(normal_target, 6);
+        assert_eq!(ethereal_target, 4);
+
+        let (unsaved_normal, _, _) = resolve_save(normal_target, 1, Some(&[5]));
+        let (unsaved_ethereal, _, _) = resolve_save(ethereal_target, 1, Some(&[5]));
+        assert_eq!(unsaved_normal, 1);
+        assert_eq!(unsaved_ethereal, 0);
+    }
+
+    #[test]
+    fn ethereal_save_phase_description_in_full_combat() {
+        let mut weapon = test_weapon();
+        weapon.rend = -2;
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            false, // stop_after_wound
+            true,  // defender_ethereal
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+        );
+        let save_phase = &result.phases[2];
+        assert!(save_phase.description.contains("Ethereal"));
+        assert!(save_phase.description.contains("rend ignored"));
+    }
+
+    #[test]
+    fn ethereal_save_phase_description_when_stopped_after_wound() {
+        let mut weapon = test_weapon();
+        weapon.rend = -1;
+        weapon.attack = "1".into();
+        weapon.to_wound = 1;
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            true, // defender_ethereal
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+        );
+        assert!(result.stopped_after_wound);
+        let save_phase = &result.phases[2];
+        assert!(save_phase.skipped);
+        assert!(save_phase.description.contains("Ethereal"));
+        assert!(save_phase.description.contains("Pending"));
+    }
+
+    #[test]
+    fn ethereal_does_not_affect_ward() {
+        // Ward resolution is independent of save/rend. Ethereal changes how many
+        // wounds reach damage, but once damage is determined, ward works the same.
+        let damage = 3;
+        let ward_result = resolve_ward(damage, 6, Some(&[1, 6, 6]));
+        assert_eq!(ward_result.final_damage, 1); // Two 6s save one point each, 1 fails
+        assert_eq!(ward_result.wounds_saved, 2);
+    }
+
+    #[test]
+    fn ethereal_off_uses_normal_rend() {
+        // Without ethereal, rend -2 makes a save 4+ into a 6+ target.
+        let target = calculate_save_target(4, -2, 0, false);
+        assert_eq!(target, 6);
+
+        let (unsaved, _, _) = resolve_save(target, 1, Some(&[4])); // 4 fails vs 6+
+        assert_eq!(unsaved, 1);
+    }
+
+
 }
