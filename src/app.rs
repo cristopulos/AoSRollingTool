@@ -203,6 +203,7 @@ impl AoSApp {
                             self.attack_modifier,
                             self.crit_effect_override.clone(),
                             None,
+                            None,
                         );
                         result.weapon_index = self.selected_weapon_index.unwrap_or(0);
                         // Update unified recently-used list before storing result.

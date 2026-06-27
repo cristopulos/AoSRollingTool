@@ -50,7 +50,9 @@ pub fn calculate_save_target(
         defender_save
     } else {
         let target = defender_save as i8 - weapon_rend + rend_modifier;
-        target.max(0) as u8
+        // Invariant: a dice test can never be easier than 2+ (a natural 1 always fails).
+        // Sentinel 7 ("no save") survives since 7.max(2) == 7.
+        target.max(2) as u8
     }
 }
 
@@ -67,9 +69,11 @@ fn save_info(
         calculate_save_target(defender_save, weapon_rend, rend_modifier, defender_ethereal);
     let pending_suffix = if pending { " - Pending" } else { "" };
     let desc = if defender_ethereal {
+        // Floor the displayed target to match the 2+ invariant enforced in resolve_save.
+        let shown = defender_save.max(2);
         format!(
             "Save ({}+) — Ethereal (rend ignored){}",
-            defender_save, pending_suffix
+            shown, pending_suffix
         )
     } else if rend_modifier != 0 {
         let base = calculate_save_target(defender_save, weapon_rend, 0, false);
@@ -109,6 +113,9 @@ pub fn resolve_hits(
     crit_effect_override: Option<CritEffect>,
     provided_rolls: Option<&[u8]>,
 ) -> (usize, usize, usize, usize, Vec<DiceRoll>) {
+    // Invariant: a dice test can never be easier than 2+ (a natural 1 always fails).
+    let effective_to_hit = effective_to_hit.max(2);
+
     let rolls = match provided_rolls {
         Some(r) => r.to_vec(),
         None => roll_d6_batch(attacks),
@@ -174,6 +181,9 @@ pub fn resolve_wounds(
     effective_to_wound: u8,
     provided_rolls: Option<&[u8]>,
 ) -> (usize, Vec<DiceRoll>) {
+    // Invariant: a dice test can never be easier than 2+ (a natural 1 always fails).
+    let effective_to_wound = effective_to_wound.max(2);
+
     let rolls = match provided_rolls {
         Some(r) => r.to_vec(),
         None => roll_d6_batch(wounds_to_roll),
@@ -203,7 +213,8 @@ pub fn resolve_save(
     wounds: usize,
     provided_rolls: Option<&[u8]>,
 ) -> (usize, Vec<DiceRoll>, bool) {
-    // Auto-fail if save target > 6
+    // Auto-fail if save target > 6 (e.g. "no save" sentinel 7).
+    // This check must come BEFORE the 2+ floor so the sentinel survives.
     if save_target > 6 {
         return (
             wounds,
@@ -211,6 +222,9 @@ pub fn resolve_save(
             true, // auto_fails
         );
     }
+
+    // Invariant: a dice test can never be easier than 2+ (a natural 1 always fails).
+    let save_target = save_target.max(2);
 
     let rolls = match provided_rolls {
         Some(r) => r.to_vec(),
@@ -237,6 +251,9 @@ pub fn resolve_save(
 
 /// Resolve ward saves.
 pub fn resolve_ward(damage: usize, ward_target: u8, provided_rolls: Option<&[u8]>) -> WardResult {
+    // Invariant: a dice test can never be easier than 2+ (a natural 1 always fails).
+    let ward_target = ward_target.max(2);
+
     let rolls = match provided_rolls {
         Some(r) => r.to_vec(),
         None => roll_d6_batch(damage),
@@ -277,6 +294,12 @@ fn has_dice(s: &str) -> bool {
 /// `attack_modifier` modifies the per-model attack count before summing across models.
 /// e.g., with attack "2" and modifier +2: 5 models × (2+2) = 20 attacks.
 /// For dice expressions: "D6" + 1 -> "D6+1". Ignored when `use_attack_override` is true.
+///
+/// `provided_rolls` and `provided_wound_rolls` are for testing only: the former
+/// supplies deterministic Hit rolls, the latter deterministic Wound rolls. Both
+/// default to `None` in production (random rolls). The slice lengths need not
+/// match the required roll counts; `resolve_hits`/`resolve_wounds` iterate over
+/// whatever is provided.
 #[allow(clippy::too_many_arguments)]
 pub fn resolve_combat(
     attacker: &Unit,
@@ -297,11 +320,14 @@ pub fn resolve_combat(
     damage_modifier: i8,
     attack_modifier: i8,
     crit_effect_override: Option<CritEffect>,
-    provided_rolls: Option<&[u8]>, // For testing only
+    provided_rolls: Option<&[u8]>,       // For testing only
+    provided_wound_rolls: Option<&[u8]>, // For testing only
 ) -> CombatResult {
-    // Compute effective values with modifiers
-    let effective_to_hit = (weapon.to_hit as i8 - hit_modifier).clamp(1, 6) as u8;
-    let effective_to_wound = (weapon.to_wound as i8 - wound_modifier).clamp(1, 6) as u8;
+    // Compute effective values with modifiers.
+    // Invariant: a dice test can never be easier than 2+ (a natural 1 always fails),
+    // so the modifier-adjusted target is clamped to [2, 6].
+    let effective_to_hit = (weapon.to_hit as i8 - hit_modifier).clamp(2, 6) as u8;
+    let effective_to_wound = (weapon.to_wound as i8 - wound_modifier).clamp(2, 6) as u8;
     let effective_damage = apply_damage_modifier(&weapon.damage, damage_modifier);
 
     // Determine number of attacks
@@ -423,7 +449,12 @@ pub fn resolve_combat(
     // Phase 2: Wound
     let total_wounds_to_roll = hits + extra_hits;
     let (wounds, wound_rolls) = if total_wounds_to_roll > 0 {
-        resolve_wounds(weapon, total_wounds_to_roll, effective_to_wound, None)
+        resolve_wounds(
+            weapon,
+            total_wounds_to_roll,
+            effective_to_wound,
+            provided_wound_rolls,
+        )
     } else {
         (0, Vec::new())
     };
@@ -461,8 +492,13 @@ pub fn resolve_combat(
 
     // Early stop: only process hit and wound phases; mortal wounds from crits are still counted.
     if stop_after_wound {
-        let (_save_target, save_desc) =
-            save_info(defender.save, weapon.rend, rend_modifier, defender_ethereal, true);
+        let (_save_target, save_desc) = save_info(
+            defender.save,
+            weapon.rend,
+            rend_modifier,
+            defender_ethereal,
+            true,
+        );
         let save_phase = PhaseResult {
             phase: Phase::Save,
             rolls: Vec::new(),
@@ -511,7 +547,8 @@ pub fn resolve_combat(
             auto_fails: false,
             skipped: true,
             description: defender.ward.map_or("Ward (-) - Pending".to_string(), |w| {
-                format!("Ward ({}+) - Pending", w)
+                // Floor the displayed target to match the 2+ invariant enforced in resolve_ward.
+                format!("Ward ({}+) - Pending", w.max(2))
             }),
             variance_step: None,
             annotation: None,
@@ -532,8 +569,13 @@ pub fn resolve_combat(
     }
 
     // Phase 3: Save
-    let (save_target, save_desc) =
-        save_info(defender.save, weapon.rend, rend_modifier, defender_ethereal, false);
+    let (save_target, save_desc) = save_info(
+        defender.save,
+        weapon.rend,
+        rend_modifier,
+        defender_ethereal,
+        false,
+    );
     let (unsaved, save_rolls, auto_fails) = if total_wounds > 0 {
         resolve_save(save_target, total_wounds, None)
     } else {
@@ -632,6 +674,8 @@ pub fn resolve_combat(
 
     if include_ward && total_damage > 0 {
         if let Some(ward_target) = defender.ward {
+            // Floor the displayed target to match the 2+ invariant enforced in resolve_ward.
+            let ward_target = ward_target.max(2);
             let ward_result = resolve_ward(total_damage, ward_target, None);
             final_damage = ward_result.final_damage;
 
@@ -931,6 +975,7 @@ mod tests {
             0, // attack_modifier
             None,
             Some(&[6]), // One crit roll
+            None,
         );
 
         assert!(result.stopped_after_wound);
@@ -979,6 +1024,7 @@ mod tests {
             0, // attack_modifier
             None,
             Some(&[4, 5, 6, 3, 2]),
+            None,
         );
 
         assert_eq!(result.phases.len(), 4); // No ward
@@ -1015,6 +1061,7 @@ mod tests {
             0, // attack_modifier
             None,
             Some(&[6]),
+            None,
         );
 
         // Mortal wounds should go straight to damage
@@ -1030,8 +1077,8 @@ mod tests {
             name: "Override Test Weapon".into(),
             range: None,
             attack: "3".into(),
-            to_hit: 1,
-            to_wound: 1,
+            to_hit: 2,
+            to_wound: 2,
             rend: -10,
             damage: "1".into(),
             crit_hit: None,
@@ -1057,7 +1104,8 @@ mod tests {
             0,
             0, // attack_modifier
             None,
-            Some(&[1; 25]),
+            Some(&[6; 25]),
+            Some(&[6; 25]),
         );
 
         assert_eq!(result.phases[0].rolls.len(), 25);
@@ -1072,8 +1120,8 @@ mod tests {
             name: "Champion Test Weapon".into(),
             range: None,
             attack: "3".into(),
-            to_hit: 1, // Auto-hit
-            to_wound: 1,
+            to_hit: 2, // Auto-hit
+            to_wound: 2,
             rend: -10,
             damage: "1".into(),
             crit_hit: None,
@@ -1099,7 +1147,8 @@ mod tests {
             0,
             0, // attack_modifier
             None,
-            Some(&[1; 16]),
+            Some(&[6; 16]),
+            Some(&[6; 16]),
         );
 
         assert_eq!(result.phases[0].rolls.len(), 16);
@@ -1114,8 +1163,8 @@ mod tests {
             name: "Champion Override Test Weapon".into(),
             range: None,
             attack: "3".into(),
-            to_hit: 1,
-            to_wound: 1,
+            to_hit: 2,
+            to_wound: 2,
             rend: -10,
             damage: "1".into(),
             crit_hit: None,
@@ -1141,7 +1190,8 @@ mod tests {
             0,
             0, // attack_modifier
             None,
-            Some(&[1; 20]),
+            Some(&[6; 20]),
+            Some(&[6; 20]),
         );
 
         assert_eq!(result.phases[0].rolls.len(), 20);
@@ -1172,6 +1222,7 @@ mod tests {
             0, // attack_modifier
             None,
             Some(&[4, 5, 6, 3, 2]),
+            None,
         );
 
         assert_eq!(result.phases.len(), 5);
@@ -1217,6 +1268,7 @@ mod tests {
             0, // attack_modifier
             None,
             Some(&[4, 5, 6, 3, 2]),
+            None,
         );
 
         assert!(result.stopped_after_wound);
@@ -1252,6 +1304,7 @@ mod tests {
             0, // attack_modifier
             None,
             Some(&[1, 2, 3, 4, 6]),
+            None,
         );
 
         assert!(result.stopped_after_wound);
@@ -1286,6 +1339,7 @@ mod tests {
             0, // attack_modifier
             None,
             Some(&[6]),
+            None,
         );
 
         assert!(result.stopped_after_wound);
@@ -1322,13 +1376,14 @@ mod tests {
             false,
             true, // stop_after_wound
             false,
-            1,    // hit_modifier: +1
-            0,    // wound_modifier
-            0,    // rend_modifier
-            0,    // damage_modifier
-            0,    // attack_modifier
+            1, // hit_modifier: +1
+            0, // wound_modifier
+            0, // rend_modifier
+            0, // damage_modifier
+            0, // attack_modifier
             None,
             Some(&[2, 3, 4, 5, 6]), // All 5 hit on 2+
+            None,
         );
 
         // With hit_modifier: +1, effective to_hit = 2+ (was 3+)
@@ -1362,13 +1417,14 @@ mod tests {
             false,
             true, // stop_after_wound
             false,
-            -1,   // hit_modifier: -1
-            0,    // wound_modifier
-            0,    // rend_modifier
-            0,    // damage_modifier
-            0,    // attack_modifier
+            -1, // hit_modifier: -1
+            0,  // wound_modifier
+            0,  // rend_modifier
+            0,  // damage_modifier
+            0,  // attack_modifier
             None,
             Some(&[3, 4, 5, 6]), // Only [4, 5, 6] hit on 4+
+            None,
         );
 
         // With hit_modifier: -1, effective to_hit = 4+ (was 3+)
@@ -1405,13 +1461,14 @@ mod tests {
             false,
             true, // stop_after_wound
             false,
-            0,    // hit_modifier
-            1,    // wound_modifier: +1
-            0,    // rend_modifier
-            0,    // damage_modifier
-            0,    // attack_modifier
+            0, // hit_modifier
+            1, // wound_modifier: +1
+            0, // rend_modifier
+            0, // damage_modifier
+            0, // attack_modifier
             None,
             Some(&[3, 4, 5, 6]), // 4 hits on 3+
+            Some(&[6; 4]),       // 4 wounds on floored 2+
         );
 
         // All 4 hits wound (to_wound is 1, so all wounds succeed)
@@ -1461,13 +1518,14 @@ mod tests {
             false,
             false, // Process full combat
             false,
-            0,     // hit_modifier
-            0,     // wound_modifier
-            0,     // rend_modifier
-            2,     // damage_modifier: +2
-            0,     // attack_modifier
+            0, // hit_modifier
+            0, // wound_modifier
+            0, // rend_modifier
+            2, // damage_modifier: +2
+            0, // attack_modifier
             None,
             Some(&[3, 4, 5]), // 3 hits on 3+
+            Some(&[6; 3]),    // 3 wounds on floored 2+
         );
 
         // 3 hits, 3 wounds (auto-wound), rend -10 auto-fails saves = 3 unsaved wounds
@@ -1489,7 +1547,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_modifier_clamped_at_1() {
+    fn hit_modifier_clamped_at_2() {
         let weapon = Weapon {
             name: "Test Weapon".into(),
             range: None,
@@ -1514,17 +1572,18 @@ mod tests {
             false,
             true, // stop_after_wound
             false,
-            5,    // hit_modifier: +5
-            0,    // wound_modifier
-            0,    // rend_modifier
-            0,    // damage_modifier
-            0,    // attack_modifier
+            5, // hit_modifier: +5
+            0, // wound_modifier
+            0, // rend_modifier
+            0, // damage_modifier
+            0, // attack_modifier
             None,
-            Some(&[2, 3, 4, 5, 6]), // All 5 should hit (clamped to 1+)
+            Some(&[2, 3, 4, 5, 6]), // All 5 should hit (clamped to 2+)
+            None,
         );
 
-        // With hit_modifier: +5, effective to_hit = max(1, 3-5) = 1
-        // All rolls >= 1, so all 5 hit
+        // With hit_modifier: +5, effective to_hit = max(2, 3-5) = 2
+        // All rolls >= 2, so all 5 hit
         assert_eq!(result.total_hits, 5);
     }
 
@@ -1561,6 +1620,7 @@ mod tests {
             2, // attack_modifier: +2
             None,
             Some(&[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]),
+            None,
         );
 
         // 5 models × (2+2) = 20 attacks
@@ -1600,6 +1660,7 @@ mod tests {
             1, // attack_modifier: +1
             None,
             Some(&[3, 3, 3, 3]), // 4 rolls, D6+1 each (2 models)
+            None,
         );
 
         // Variance step should show D6+1
@@ -1643,6 +1704,7 @@ mod tests {
             -1, // attack_modifier: -1
             None,
             Some(&[3, 3, 3]),
+            None,
         );
 
         // 3 models × (2-1) = 3 attacks
@@ -1682,6 +1744,7 @@ mod tests {
             -5, // attack_modifier: -5 (should clamp to 1 per model)
             None,
             Some(&[3, 3, 3]),
+            None,
         );
 
         // 3 models × max(1, 1-5) = 3 attacks (clamped at 1)
@@ -1721,6 +1784,7 @@ mod tests {
             99, // attack_modifier: +99 (should be ignored)
             None,
             Some(&[3, 3, 3, 3, 3]),
+            None,
         );
 
         // Override uses exactly 5 attacks regardless of modifier
@@ -1845,6 +1909,7 @@ mod tests {
             0, // attack_modifier
             Some(CritEffect::AutoWound),
             Some(&[6]),
+            None,
         );
 
         assert!(result.stopped_after_wound);
@@ -1880,12 +1945,13 @@ mod tests {
             0,    // attack_modifier
             None, // no override, use weapon's ExtraHit
             Some(&[6]),
+            Some(&[6; 2]),
         );
 
         assert!(result.stopped_after_wound);
         // ExtraHit: 6 = 1 base hit + 1 extra = 2 hits for wound rolls
         assert_eq!(result.total_hits, 2);
-        assert_eq!(result.total_wounds, 2); // All wound on 1+ (auto-wound)
+        assert_eq!(result.total_wounds, 2); // All wound on 2+ (deterministic)
     }
 
     #[test]
@@ -1915,6 +1981,7 @@ mod tests {
             0,                          // attack_modifier
             Some(CritEffect::ExtraHit), // Override to ExtraHit
             Some(&[6]),
+            Some(&[6; 2]),
         );
 
         assert!(result.stopped_after_wound);
@@ -1952,6 +2019,7 @@ mod tests {
             0,    // attack_modifier
             None, // no override, use weapon's MortalWounds
             Some(&[6, 6]),
+            None,
         );
 
         // Two 6s with MW: first 6 = 1 MW, second 6 = 1 MW = 2 total (weapon.damage = 1)
@@ -1995,6 +2063,7 @@ mod tests {
             0,                           // attack_modifier (should be ignored)
             Some(CritEffect::AutoWound), // Override to auto-wound
             Some(&[4, 5, 6]),            // All hit on 3+
+            Some(&[6; 2]),               // 2 non-crit hits wound on floored 2+
         );
 
         // 3 attacks, all hit, all are 6 = 3 auto-wounds
@@ -2122,6 +2191,7 @@ mod tests {
             0,
             Some(CritEffect::MortalWounds), // Override to MortalWounds
             Some(&[6, 5, 3]),               // 1 crit (6), 2 normal hits (5, 3)
+            Some(&[6; 2]),                  // 2 non-crit hits wound on floored 2+
         );
 
         assert!(result.stopped_after_wound);
@@ -2161,6 +2231,7 @@ mod tests {
             0,
             None,
             Some(&[6]), // One crit roll
+            Some(&[6; 2]),
         );
 
         // ExtraHit is tracked on the hit phase for inline display.
@@ -2197,6 +2268,7 @@ mod tests {
             0,
             None,
             Some(&[6, 6, 6]), // Three crit rolls = 3 extra hits
+            Some(&[6; 6]),
         );
 
         let hit_phase = &result.phases[0];
@@ -2232,6 +2304,7 @@ mod tests {
             0,
             None,
             Some(&[6]),
+            None,
         );
 
         // AutoWound is tracked on the wound phase for inline display.
@@ -2268,6 +2341,7 @@ mod tests {
             0,
             None,
             Some(&[6]),
+            None,
         );
 
         // AutoWound is tracked on the wound phase for inline display.
@@ -2306,6 +2380,7 @@ mod tests {
             0,
             None,
             Some(&[6, 6, 6]), // Three auto-wounds
+            None,
         );
 
         // AutoWound is tracked on the wound phase for inline display.
@@ -2342,6 +2417,7 @@ mod tests {
             0,
             None,
             Some(&[5]), // Normal hit, no crit
+            None,
         );
 
         let save_phase = &result.phases[2];
@@ -2377,6 +2453,7 @@ mod tests {
             0,
             None,
             Some(&[6, 6]), // Two crits = 2 mortal wounds each dealing damage
+            None,
         );
 
         // MortalWounds are tracked on the damage phase for inline display.
@@ -2413,6 +2490,7 @@ mod tests {
             0,
             None,
             Some(&[6]),
+            None,
         );
 
         let damage_phase = &result.phases[3];
@@ -2448,6 +2526,7 @@ mod tests {
             0,
             Some(CritEffect::ExtraHit), // Override to extra hit
             Some(&[6]),
+            Some(&[6; 2]),
         );
 
         // ExtraHit is tracked on the hit phase for inline display.
@@ -2484,6 +2563,7 @@ mod tests {
             0,
             Some(CritEffect::MortalWounds), // Override to MW
             Some(&[6]),
+            None,
         );
 
         // MortalWounds are tracked on the damage phase for inline display.
@@ -2520,6 +2600,7 @@ mod tests {
             0,
             None,
             Some(&[6]),
+            None,
         );
 
         // AutoWound is tracked on the wound phase for inline display.
@@ -2559,6 +2640,7 @@ mod tests {
             0,
             None,
             Some(&[6, 6]), // Two MW
+            None,
         );
 
         // MortalWounds are tracked on the damage phase for inline display.
@@ -2595,6 +2677,7 @@ mod tests {
             0,
             None,
             Some(&[6]),
+            None,
         );
 
         // Hit phase tracks extra hits for inline display.
@@ -2631,6 +2714,7 @@ mod tests {
             0,
             None,
             Some(&[6]),
+            None,
         );
 
         // Ward phase never has annotation
@@ -2657,7 +2741,7 @@ mod tests {
         rolls.extend(std::iter::repeat_n(4u8, 34)); // 34 normal hits (roll 4)
         rolls.extend(std::iter::repeat_n(6u8, 13)); // 13 sixes (crits)
         rolls.extend(std::iter::repeat_n(2u8, 13)); // 13 misses (roll 2)
-                                                       // Total: 34 + 13 + 13 = 60 rolls
+                                                    // Total: 34 + 13 + 13 = 60 rolls
 
         let result = resolve_combat(
             &attacker,
@@ -2677,6 +2761,7 @@ mod tests {
             0,
             Some(CritEffect::ExtraHit), // OVERRIDE to ExtraHit
             Some(&rolls),
+            Some(&[6; 60]), // All 60 wound rolls succeed on 4+
         );
 
         let hit_phase = &result.phases[0];
@@ -2748,6 +2833,7 @@ mod tests {
             0,
             None, // NO override - use weapon's built-in ExtraHit
             Some(&rolls),
+            Some(&[6; 60]), // All 60 wound rolls succeed on 4+
         );
 
         let hit_phase = &result.phases[0];
@@ -2816,6 +2902,7 @@ mod tests {
             0,
             None,
             Some(&[5, 6]), // 5=normal hit, 6=MW crit
+            Some(&[6]),    // 1 non-crit hit wounds on floored 2+
         );
 
         let damage_phase = &result.phases[3];
@@ -2861,6 +2948,7 @@ mod tests {
             0,
             None,
             Some(&[6, 6]), // Both crits; MW damage is internally rolled for D6 so we assert exact range
+            None,
         );
 
         // Both are MW, bypass wound/save
@@ -2905,6 +2993,7 @@ mod tests {
             0,
             None,
             Some(&[5, 6]), // 5=normal hit, 6=MW crit
+            Some(&[6]),    // 1 non-crit hit wounds on floored 2+
         );
 
         // Effective damage: 2 + 1 = 3
@@ -2947,6 +3036,7 @@ mod tests {
             0,
             None,
             Some(&[6, 6]), // Two ExtraHit crits
+            Some(&[6; 4]),
         );
 
         // 2 ExtraHit crits = 2 base hits + 2 extra hits = 4 total wound rolls
@@ -2985,6 +3075,7 @@ mod tests {
             0,
             None,
             Some(&[6, 6, 6]), // Three AutoWound crits
+            None,
         );
 
         // 3 AutoWound crits = 3 wounds (bypass wound roll)
@@ -3018,6 +3109,7 @@ mod tests {
             0,
             None,
             Some(&[3, 4, 5]),
+            None,
         );
 
         for phase in &result.phases {
@@ -3059,6 +3151,7 @@ mod tests {
             0,
             None,
             Some(&[6, 5, 6]), // Two AutoWounds + 1 normal hit
+            Some(&[6]),       // 1 non-crit hit wounds on floored 2+
         );
 
         let save_phase = &result.phases[2];
@@ -3096,6 +3189,7 @@ mod tests {
             0,
             None,
             Some(&[6, 6]), // Two MW crits
+            None,
         );
 
         let ward_phase = &result.phases[4];
@@ -3115,21 +3209,19 @@ mod tests {
             attacker_name: "Test Attacker".into(),
             weapon_name: "Test Weapon".into(),
             defender_name: "Test Defender".into(),
-            phases: vec![
-                PhaseResult {
-                    phase: Phase::Hit,
-                    rolls: vec![],
-                    successes: 0,
-                    failures: 0,
-                    total_output: 0,
-                    auto_fails: false,
-                    skipped: false,
-                    description: "Hit (3+)".into(),
-                    variance_step: None,
-                    annotation: None,
-                    crit_extra_count: 0,
-                },
-            ],
+            phases: vec![PhaseResult {
+                phase: Phase::Hit,
+                rolls: vec![],
+                successes: 0,
+                failures: 0,
+                total_output: 0,
+                auto_fails: false,
+                skipped: false,
+                description: "Hit (3+)".into(),
+                variance_step: None,
+                annotation: None,
+                crit_extra_count: 0,
+            }],
             final_damage: 5,
             mortal_wounds: 0,
             stopped_after_wound: false,
@@ -3159,16 +3251,20 @@ mod tests {
             false,
             false, // Full combat, not stop_after_wound
             false,
-            0,    // hit_modifier
-            0,    // wound_modifier
-            0,    // rend_modifier
-            0,    // damage_modifier
-            0,    // attack_modifier
+            0, // hit_modifier
+            0, // wound_modifier
+            0, // rend_modifier
+            0, // damage_modifier
+            0, // attack_modifier
             None,
             Some(&[4, 5, 6, 3, 2]),
+            None,
         );
 
-        assert_eq!(result.weapon_index, 0, "resolve_combat should set weapon_index to 0 by default");
+        assert_eq!(
+            result.weapon_index, 0,
+            "resolve_combat should set weapon_index to 0 by default"
+        );
     }
 
     #[test]
@@ -3193,15 +3289,18 @@ mod tests {
             0,
             0,
             0,
-            0,    // attack_modifier
+            0, // attack_modifier
             None,
             Some(&[4, 5, 6, 3, 2]),
+            None,
         );
 
         assert!(result.stopped_after_wound);
-        assert_eq!(result.weapon_index, 0, "resolve_combat with stop_after_wound should set weapon_index to 0");
+        assert_eq!(
+            result.weapon_index, 0,
+            "resolve_combat with stop_after_wound should set weapon_index to 0"
+        );
     }
-
 
     #[test]
     fn calculate_save_target_ethereal_ignores_rend() {
@@ -3286,6 +3385,7 @@ mod tests {
             0,
             None,
             Some(&[6]),
+            Some(&[6]),
         );
         let save_phase = &result.phases[2];
         assert!(save_phase.description.contains("Ethereal"));
@@ -3319,6 +3419,7 @@ mod tests {
             0,
             None,
             Some(&[6]),
+            Some(&[6]),
         );
         assert!(result.stopped_after_wound);
         let save_phase = &result.phases[2];
@@ -3347,5 +3448,156 @@ mod tests {
         assert_eq!(unsaved, 1);
     }
 
+    #[test]
+    fn hit_target_never_below_two_with_modifier() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "2".into(),
+            to_hit: 2,
+            to_wound: 4,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+        // hit_modifier +1 on a 2+ would naively give 1+, but the floor keeps it at 2+.
+        // A roll of 1 must therefore miss.
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            false,
+            1, // hit_modifier: +1
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[1, 6]), // 1 misses on 2+, 6 hits
+            None,
+        );
+        assert_eq!(result.total_hits, 1);
+    }
 
+    #[test]
+    fn wound_target_never_below_two_with_modifier() {
+        let weapon = Weapon {
+            name: "Test Weapon".into(),
+            range: None,
+            attack: "2".into(),
+            to_hit: 2,
+            to_wound: 2,
+            rend: 0,
+            damage: "1".into(),
+            crit_hit: None,
+        };
+        let attacker = test_attacker();
+        let defender = test_defender(4, None);
+        // wound_modifier +1 on a 2+ would naively give 1+, but the floor keeps it at 2+.
+        // Both attacks hit (rolls 6,6); wound rolls 1 (misses on 2+) and 6 (wounds).
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            false,
+            true, // stop_after_wound
+            false,
+            0,
+            1, // wound_modifier: +1
+            0,
+            0,
+            0,
+            None,
+            Some(&[6, 6]), // both hit
+            Some(&[1, 6]), // 1 misses on 2+, 6 wounds
+        );
+        assert_eq!(result.total_hits, 2);
+        assert_eq!(result.total_wounds, 1);
+    }
+
+    #[test]
+    fn save_target_never_below_two() {
+        // save 2, weapon rend 0, rend_modifier -1 => 2 - 0 + (-1) = 1, floored to 2.
+        assert_eq!(calculate_save_target(2, 0, -1, false), 2);
+        // A roll of 1 fails against the floored 2+; a roll of 2 saves.
+        let (unsaved, _, _) = resolve_save(1, 2, Some(&[1, 2]));
+        assert_eq!(unsaved, 1); // roll 1 fails to save
+    }
+
+    #[test]
+    fn ward_target_never_below_two() {
+        // resolve_ward floors ward_target to 2 internally.
+        // roll 1 does NOT save against the floored 2+; roll 2 saves.
+        let r1 = resolve_ward(1, 1, Some(&[1]));
+        assert_eq!(r1.wounds_saved, 0);
+        let r2 = resolve_ward(1, 1, Some(&[2]));
+        assert_eq!(r2.wounds_saved, 1);
+    }
+
+    #[test]
+    fn save_sentinel_seven_still_auto_fails() {
+        // Sentinel 7 ("no save") must survive the 2+ floor and still auto-fail.
+        let (unsaved, rolls, auto_fails) = resolve_save(7, 3, Some(&[6, 6, 6]));
+        assert!(auto_fails);
+        assert_eq!(unsaved, 3);
+        assert_eq!(rolls.len(), 0);
+    }
+
+    #[test]
+    fn ethereal_save_of_one_displays_floored() {
+        let (_, desc) = save_info(1, 0, 0, true, false);
+        assert!(
+            desc.contains("2+"),
+            "ethereal save 1 should display as 2+, got: {}",
+            desc
+        );
+    }
+
+    #[test]
+    fn stop_after_wound_ward_of_one_displays_floored() {
+        let mut weapon = test_weapon();
+        weapon.attack = "1".into();
+        weapon.to_wound = 2;
+        let attacker = test_attacker();
+        let defender = test_defender(4, Some(1)); // ward 1
+        let result = resolve_combat(
+            &attacker,
+            &defender,
+            &weapon,
+            1,
+            false,
+            false,
+            0,
+            true, // include_ward (irrelevant since stopped)
+            true, // stop_after_wound
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            Some(&[6]),
+            Some(&[6]),
+        );
+        let ward_phase = &result.phases[4];
+        assert!(ward_phase.skipped);
+        assert!(
+            ward_phase.description.contains("2+"),
+            "ward 1 should display as 2+, got: {}",
+            ward_phase.description
+        );
+    }
 }

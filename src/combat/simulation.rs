@@ -84,6 +84,7 @@ pub fn run_simulation(
                 attack_modifier,
                 crit_effect_override.clone(),
                 None,
+                None,
             );
             (
                 result.phases[0].total_output, // hits

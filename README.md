@@ -78,6 +78,8 @@ Edit `resources/units.json` to add your own units and weapons:
 4. **Damage**: Unsaved wounds × weapon damage. Damage can be modified (flat values and dice expressions both supported).
 5. **Ward** (optional): D6 per damage point. Target is defender's ward value.
 
+> **2+ minimum target (all phases):** A natural roll of 1 always fails. No modifier can ever push a Hit, Wound, Save, or Ward target below 2+. For example, a 2+ hit test given a +1 modifier still requires a roll of 2 or higher — the +1 has no further effect once the target is already at 2+. This floor is enforced both at the modifier layer (so displayed targets are honest) and inside each dice-resolution function (so it cannot be bypassed by any caller).
+
 ### Weapon Stat Modifiers
 
 The UI provides six modifier controls (range: -3 to +3 for numeric modifiers):
