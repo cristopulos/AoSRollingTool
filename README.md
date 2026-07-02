@@ -20,12 +20,23 @@ A Rust-based desktop application with a GUI for visualizing combat sequence roll
 
 ## Supported Factions
 
-- **Skaven**
-- **Nighthaunt**
-- **Kruleboyz**
-- **Kharadron Overlords**
-- **Slaves to Darkness**
-- **Sylvaneth**
+Data is scraped from [Wahapedia](https://wahapedia.ru) AoS4 warscroll pages using the extraction pipeline in `aos4-extractor/`. The full faction list is defined in `aos4-extractor/factions.toml`.
+
+**All 28 factions scraped (1126 units):**
+
+| Grand Alliance | Factions |
+|----------------|----------|
+| **Order** (9) | Cities of Sigmar, Daughters of Khaine, Fyreslayers, Idoneth Deepkin, Kharadron Overlords, Lumineth Realm-lords, Seraphon, Stormcast Eternals, Sylvaneth |
+| **Chaos** (7) | Beasts of Chaos, Blades of Khorne, Disciples of Tzeentch, Hedonites of Slaanesh, Helsmiths of Hashut, Maggotkin of Nurgle, Skaven, Slaves to Darkness |
+| **Death** (4) | Flesh-eater Courts, Nighthaunt, Ossiarch Bonereapers, Soulblight Gravelords |
+| **Destruction** (5) | Bonesplitterz, Gloomspite Gitz, Ironjawz, Kruleboyz, Ogor Mawtribes, Sons of Behemat |
+| **Special** (1) | Endless Spells |
+
+To re-scrape or add new factions, run the pipeline from `aos4-extractor/`:
+```bash
+cd aos4-extractor
+python3 src/run_pipeline.py
+```
 
 ## How to Run
 

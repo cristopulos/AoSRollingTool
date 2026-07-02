@@ -100,14 +100,11 @@ impl AoSApp {
     }
 
     fn load_default_units() -> Vec<Unit> {
-        // Try loading from embedded resources first, then from local file
+        // Load from the canonical resources/units.json (produced by the extractor pipeline)
         if let Ok(units) = load_units_from_path("resources/units.json") {
             return units;
         }
-        if let Ok(units) = load_units_from_path("src/resources/units.json") {
-            return units;
-        }
-        log::warn!("Could not load units.json from resources/ or src/resources/");
+        log::warn!("Could not load units.json from resources/");
         Vec::new()
     }
 
